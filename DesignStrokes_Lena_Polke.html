@@ -495,7 +495,7 @@
             pointc=(ptnew_1-#.x,ptnew_2-#.y);
             if(|pointc|<=fval+0.5,
               if(col_4<1,
-                coln=compmpequi((floor(fval),(fval-floor(fval))*100,0,1),base); ); //end if col_4
+                coln=compmpequi((floor(fval),(fval-floor(fval))*100,0,1),base); );
             );
             coln
           );//end colorplot
@@ -524,7 +524,7 @@
               if(ins_4<1, col=compmpequi((eone,etwo,0,1),base););
             );
             col
-          );//end colorplots
+          );//end colorplot
 
           pt=(matact*(ptnew_1,ptnew_2,1)).xy;
           colorplot((0,0),(1024,0),"mpcanvas",
@@ -535,7 +535,7 @@
               if(col_4<1, col=compmp((mod(pt_1,imratiotile*32),16,floor(pt_1/(imratiotile*32)),1),scvel,base);  );
             );
             col
-          );//end colorplots
+          );//end colorplot
 
 
         , //changecanvas==1
@@ -2378,7 +2378,7 @@
             ,tv2=1);
           if(|p_2-3/4*64-((2/4-3/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,tv3=0,tv3=1);
 
-          if(tv1*tv2*tv3==0, //tv4
+          if(tv1*tv2*tv3==0,
             col=(0,0,0,1),
             col=(0,0,0,0)
           );
@@ -2617,13 +2617,13 @@
           p=#;
           if(|p_2-1/2*64-((2/3-1/2)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,tv1=0,tv1=1);
           if(|p_2-1/2*64-((1/3-1/2)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,tv2=0,tv2=1);
-          if(tv1*tv2==0, //tv3
+          if(tv1*tv2==0,
             col=(0,0,0,1),
             col=(0,0,0,0)
           );
           if(|p_2-1/2*64-((2/3-1/2)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,tv1=0,tv1=1);
           if(|p_2-1/2*64-((1/3-1/2)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,tv2=0,tv2=1);
-          if(tv1*tv2==0,//tv3
+          if(tv1*tv2==0,
             col=(1,0,0,1)
           );
           if(|p-(32,32)|<32,if(|p-(32,32)|>30,col=(0,0,0,1)));
@@ -2636,12 +2636,12 @@
           if(|p_2-2/3*64-((1/2-2/3)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,tv1=0,tv1=1);
           if(|p_2-1/3*64-((1/2-1/3)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,tv2=0,tv2=1);
           col=(0,0,0,0);
-          if(tv1*tv2==0, //tv3
+          if(tv1*tv2==0,
             col=(0,0,0,1)
           );
           if(|p_2-2/3*64-((1/2-2/3)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,tv1=0,tv1=1);
           if(|p_2-1/3*64-((1/2-1/3)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,tv2=0,tv2=1);
-          if(tv1*tv2==0,//tv3
+          if(tv1*tv2==0,
             col=(1,0,0,1)
           );
           if(|p-(0,32)|<32,if(|p-(0,32)|>30,col=(0,0,0,1)));
@@ -2894,7 +2894,7 @@
               ); //end colorplot
             );//end if changecanvas
           );//end repeat 9
-          amountvec = imagergba((0,0),(1024,0), "countcanvas", (0.5,0.5), interpolate->false) //1/2
+          amountvec = imagergba((0,0),(1024,0), "countcanvas", (0.5,0.5), interpolate->false)
                       + imagergba((0,0),(1024,0), "countcanvas", (512.5,0.5), interpolate->false);
           if(changecanvas==1,
             fh=imagergba((0,0),(1024,0), "countcanvas", (0.5,0.5), interpolate->false)
@@ -3170,13 +3170,13 @@
             pp=(pa1,pa2);
             colorval=(0,0,0,0);
             if(xold+32<imratio1*32,
-              colorval=imagergba((0,0),(imratio1*32,0),"load1",(pa1,pa2),interpolate->true);//lu,ru
+              colorval=imagergba((0,0),(imratio1*32,0),"load1",(pa1,pa2),interpolate->true);
             );//end if xold
             if(xold+32<imratiotile*32,
               if(xold+32>imratio1*32,
                 anteil=imratiotile*32-xold-32;
                 hanteil=1/2*anteil;
-                colorval=imagergba((0-hanteil,0),(xold+32+hanteil,0),"load2",(pa1,pa2),interpolate->true);//lu,ru
+                colorval=imagergba((0-hanteil,0),(xold+32+hanteil,0),"load2",(pa1,pa2),interpolate->true);
               );
             );//end if xold
             if(xold+32>imratiotile*32,
@@ -3543,13 +3543,13 @@
               pp=(pa1,pa2);
               colorval=(0,0,0,0);
               if(xold+32<imratio1*32,
-                colorval=imagergba((0,0),(imratio1*32,0),"load1",(pa1,pa2),interpolate->true);//lu,ru
+                colorval=imagergba((0,0),(imratio1*32,0),"load1",(pa1,pa2),interpolate->true);
               );//end if xold
               if(xold+32<imratiotile*32,
                 if(xold+32>imratio1*32,
                   anteil=imratiotile*32-xold-32;
                   hanteil=1/2*anteil;
-                  colorval=imagergba((0-hanteil,0),(xold+32+hanteil,0),"load2",(pa1,pa2),interpolate->true);//lu,ru
+                  colorval=imagergba((0-hanteil,0),(xold+32+hanteil,0),"load2",(pa1,pa2),interpolate->true);
                 );
               );//end if xold
               if(xold+32>imratiotile*32,
@@ -3668,7 +3668,7 @@
 
         colorplot((0,0),(1024,0),"conftestcanvas2",
           p=#;
-          ref=expmp(imagergba((0,0),(1024,0),"mpcanvas2",#,interpolate->true),scvel,base); //true
+          ref=expmp(imagergba((0,0),(1024,0),"mpcanvas2",#,interpolate->true),scvel,base);
           if(ref_4>0,
             erg=conftestdevi(p,ref,1);
             colvec=hue(erg_1+1/3);
