@@ -1,0 +1,2059 @@
+<!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="UTF-8">
+    <title>t_spiral_pen_canvas_new</title>
+    <style type="text/css">
+      body {
+        margin: 0px;
+        padding: 0px;
+      }
+
+      #CSCanvas {
+        width: 150vh;
+        height: 100vh;
+        display: flex;
+        flex-grow: 0;
+        background-color: rgba(0,0,0,0);
+      }
+
+
+      #container {
+        width: 100%;
+        height: 50%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      #controls {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+        height: 80px;
+        align-items: stretch;
+        text-align: center;
+        background-color: lightgray;
+        align-items: center;
+      }
+
+      .box {
+        background-color: dodgerblue;
+        border: none;
+        margin: 0px;
+        flex-grow: 0;
+        color: blue;
+        font-size: 15px;
+        height: 60px;
+        border-radius: 40%;
+        cursor: pointer;
+      }
+
+      .box:hover {
+        background-color: darkblue;
+        cursor: pointer;
+      }
+
+
+      .slider {
+        display: flex;
+        flex-direction: row;
+        -webkit-appearance: none;
+        width: 100px;
+        height: 10px;
+        border-radius: 5px;
+        outline: none;
+        opacity: 0.8;
+        -webkit-transition: .2s;
+        transition: opacity .2s;
+        background: dodgerblue;
+      }
+
+
+      .slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: darkblue;
+        cursor: pointer;
+      }
+
+      .slider::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: darkblue;
+        cursor: pointer;
+      }
+
+    </style>
+    <script type="text/javascript" src="https://cindyjs.org/dist/v0.8/Cindy.js"></script>
+    <script type="text/javascript" src="https://cindyjs.org/dist/v0.8/CindyGL.js"></script>
+    <script type="text/javascript" src="TouchEvent.js"></script>
+
+
+
+    <script id="csinit" type="text/x-cindyscript">
+      use("TouchEvent");
+
+      ptforcelist=[];
+      equimidpt=[];
+      circlist=[];
+      circ1=[];
+      collist=[];
+      lastpenforce=0;
+      startnewlist=1;
+
+      eps=0.2;
+      eps2=1/2*eps;
+
+      mouseVec=[100,100];
+      finger=0;
+      id=0;
+      param=0;
+      lastmid=0;
+      seclastmid=0;
+      lastrad=0;
+      radmean=0;
+      lenold=[0,0];
+
+      spirallist=[];
+      childlist=[];
+      kindlist=[];
+
+      createimage("stamp",500,500);
+      createimage("stampneg",500,500);
+
+      createimage("stamps",500,500);
+      createimage("stampnegs",500,500);
+
+      createimage("stampi",500,500);
+      createimage("stampnegi",500,500);
+
+      createimage("stampo",500,500);
+      createimage("stampnego",500,500);
+
+      reset() := (
+        ptforcelist=[];
+        equimidpt=[];
+        circlist=[];
+        circ1=[];
+        collist=[];
+        lastpenforce=0;
+        startnewlist=1;
+
+        finger=0;
+        id=0;
+        param=0;
+        lastmid=0;
+        seclastmid=0;
+        lastrad=0;
+        radmean=0;
+        lenold=[0,0];
+        spirallist=[];
+        childlist=[];
+        kindlist=[];
+        clearimage("stamps");
+        clearimage("stampnegs");
+        clearimage("stampi");
+        clearimage("stampnegi");
+        clearimage("stampo");
+        clearimage("stampnego");
+        clearimage("aktcanvas");
+        clearimage("storecanvas");
+      );
+
+      reset();
+
+
+      undo():=(
+          ptforcelist=[];
+          equimidpt=[];
+          circlist=[];
+          collist=[];
+          spirallist=[];
+          childlist=[];
+          kindlist=[];
+          circ1=-1;
+          lastpenforce=0;
+          startnewlist=1;
+        clearimage("aktcanvas");
+      );
+
+      fspiral(x,A,B,k,mat):=(
+        mat*(|A,B|*exp(k*x)*(cos(x),sin(x)))+A;
+      );
+
+
+      k=-0.5+(Z.x-X.x)/(Y.x-X.x);
+      Z.narrow=20;
+      doinner=false;
+      doouter=false;
+      drawlisti=[TextUi,TextVi,TextWi,li,Ui];
+      drawlisto=[TextUo,TextVo,TextWo,lo,Uo];
+      opos=(Uo.x-Vo.x)/(Wo.x-Vo.x);
+      oval=opos*2*pi;
+      ipos=(Ui.x-Vi.x)/(Wi.x-Vi.x);
+      ival=ipos*2*pi;
+      dosingle=true;
+      dodouble=false;
+      invilist=[Cic,Coc,TextCi,TextCo];
+      same=true;
+      opp=false;
+      chooselist=[Sc,Oc];
+      dointer=false;
+
+
+      clearimage("stamp");
+      canvas((0,0),(1,0),(0,1),"stamp",
+        plot(fspiral(-k/|k|*x,(0.5,0.5),(0.9,0.5),k,((1,0),(0,1))),start->0,stop->80,color->(0,0,1),size->1);
+      );
+      clearimage("stampneg");
+      canvas((0,0),(1,0),(0,1),"stampneg",
+        plot(fspiral(k/|k|*x,(0.5,0.5),(0.9,0.5),-k,((1,0),(0,1))),start->0,stop->80,color->(0,0,1),size->1);
+      );
+
+
+      createimage("storecanvas", 1024,512);
+      createimage("aktcanvas", 1024,512);
+
+      widval=-10;
+      aval=-10;
+      pval=-10;
+      rgbvec=(0,0,0);
+
+      lerp(x,y,t):=t*y+(1-t)*x;
+
+      fun(penforceVal, alti,lastpenforce, startnewlist, param,ptforcelist, equimidpt, circlist, collist,
+          spirallist, childlist, kindlist, mousePos, eps, eps2, dosingle, doouter, dointer, oval, ival,doinner,
+          dodouble,same,opp,lastmid,lastrad,radmean,lenold,seclastmid):=(
+
+        javascript("var wslider = document.getElementById('wRange'); cdy.evokeCS('widval='+wslider.value/100+';'); wslider.oninput = function() {cdy.evokeCS('widval='+ this.value/100+';')};");
+        javascript("var aslider = document.getElementById('aRange'); cdy.evokeCS('aval='+aslider.value/100+';'); aslider.oninput = function() {cdy.evokeCS('aval='+ this.value/100+';')};");
+        javascript("var pslider = document.getElementById('pRange'); cdy.evokeCS('pval='+pslider.value/100+';'); pslider.oninput = function() {cdy.evokeCS('pval='+ this.value/100+';')};");
+        javascript("var colorval = document.getElementById('color');col=colorval.value;colorval.oninput = function() {col = this.value;};colrgb=hexToRgb(col); cdy.evokeCS('rgbvec_1='+colrgb.r/255+';rgbvec_2='+colrgb.g/255+';rgbvec_3='+colrgb.b/255+';');");
+
+        if(penforceVal>0,
+          javascript("document.getElementById('undo').style.color = 'blue';");
+          javascript("document.getElementById('reset').style.color = 'blue';");
+          if(alti<=0,
+            penforceVal=widval;
+          ,
+            penforceVal=((1-aval)*(pval*penforceVal+(1-pval)*widval)+aval*(1-alti*2/pi));
+          );//end if alti
+
+          if(lastpenforce<=0,
+            startnewlist=1;
+            param=0;
+          ); //end lastpenforce
+
+          if(startnewlist==1,
+            ptforcelist=[];
+            equimidpt=[];
+            circlist=[];
+            collist=[];
+            startnewlist=0;
+            spirallist=[];
+            childlist=[];
+            kindlist=[false,false,false];
+          ); //end if startnewlist
+
+          collist=rgbvec;
+
+          ok=false;
+          if(length(ptforcelist)>0,
+            l=length(ptforcelist);
+            newpos=lerp(ptforcelist_l_1,mousePos,0.8);
+            compVal=dist(ptforcelist_l_1,newpos);
+            if(compVal>=eps,
+              if(penforceVal<0.15,penforceVal=0.15;);
+              ok=true;
+            );
+          ,
+            newpos=mousePos;
+            if(penforceVal<0.15,penforceVal=0.15;);
+            ok=true;
+          );//end if
+
+          if(ok,
+            ptforcelist=concat(ptforcelist,[[newpos,penforceVal]]);
+            n=length(ptforcelist);
+            lastpenforce=penforceVal;
+            if(n>=1,
+              if(n==1,
+                param=1;
+                equimidpt=ptforcelist;
+                m=length(equimidpt);
+              , //n>=2
+
+                lold=length(equimidpt);
+                len=|(ptforcelist_n_1-ptforcelist_(n-1)_1)|;
+                tempdist=param*eps2;
+                ptnew=ptforcelist_(n-1)_1;
+                pt=ptforcelist_(n-1)_1;
+                vec=(ptforcelist_n_1-ptforcelist_(n-1)_1);
+                vnorm=1/|vec|*vec;
+
+                while(tempdist<=len,
+                  pt=ptnew;
+                  ptnew=(pt+param*eps2*vnorm);
+                  fval=ptforcelist_(n-1)_2+tempdist/len*(ptforcelist_n_2-ptforcelist_(n-1)_2);
+                  if(fval<0.15,fval=0.15);
+                  equimidpt=concat(equimidpt,[[ptnew,fval]]);
+                  m=length(equimidpt);
+                  param=1;
+                  tempdist=tempdist+eps2;
+                ); //end while
+
+                if(tempdist>len,
+                  param=(tempdist-len)/eps2;
+                ); //end if tempdist>len
+
+                lnew=length(equimidpt);
+
+                if(dosingle,
+                  kindlist_1=true;
+                  if(doinner,
+                    kindlist_2=true;
+                  );
+                  if(doouter,
+                    kindlist_3=true;
+                  );
+                );
+                if(dointer,
+                  kindlist_3=true;
+                );
+
+                repeat(lnew-lold,
+                  kvar=lold+(#-1);
+                  spilen=length(spirallist);
+                  resultf=fcircnew(kvar, eps,eps2, equimidpt, circlist, -1, lastmid, lastrad, radmean,lenold,seclastmid,penforceVal,spirallist,k,dosingle,dodouble,same,opp,dointer);
+                  circlist=resultf_1;
+                  circ1=resultf_2;
+                  lastmid=resultf_3;
+                  lastrad=resultf_4;
+                  radmean=resultf_5;
+                  lenold=resultf_6;
+                  seclastmid=resultf_7;
+                  spirallist=resultf_8;
+                  spilennew=length(spirallist);
+                  if(dosingle,
+                    resnew=spiralchild(spirallist,childlist,spilen,spilennew,oval,ival,doinner,doouter);
+                    childlist=resnew;
+                  );
+                );//end repeat
+              );//end if n==1 -> n>=2
+            );//end if n>=1
+          ); //end if ok
+
+        ,//else if penforce()==0
+            lastpenforce=0;
+            n=0;
+        );//end if penforceVal
+
+
+        [lastpenforce,startnewlist,ptforcelist,equimidpt,circlist,-1,//circ1
+        collist,param,lastmid,lastrad,radmean,lenold,seclastmid,spirallist,childlist,kindlist]
+      );//end fun
+
+
+      spiralchild(spirallist,childlist,lenold,lennew,oval,ival,doinner,doouter):=(
+        w=ival;
+        x=oval;
+        if(lennew>lenold,
+          if(lennew>1,
+            lastmat=spirallist_(length(spirallist)-1)_4;
+            lastA=spirallist_(length(spirallist)-1)_1;
+            lastB=spirallist_(length(spirallist)-1)_2;
+            lastk=spirallist_(length(spirallist)-1)_3;
+            if(|lastA-lastB|>0.1,
+              if(doinner,
+                childlist_(length(childlist))_1=samechild(lastA,lastB,lastk,lastmat,w);
+              ,
+                childlist_(length(childlist))_1=[[],[],false,[]];
+              ); //end if doinner
+              if(doouter,
+                childlist_(length(childlist))_2=oppchild(lastA,lastB,lastk,lastmat,x);
+              ,
+                childlist_(length(childlist))_2=[[],[],false,[]];
+              );//end if doouter
+            );//end if
+          );//end if lennew>1
+          childlist=concat(childlist,[[[[],[],0,[]],[[],[],0,[]]]]);
+        ,
+          if(lennew>0,
+            lastmat=spirallist_(length(spirallist))_4;
+            lastA=spirallist_(length(spirallist))_1;
+            lastB=spirallist_(length(spirallist))_2;
+            lastk=spirallist_(length(spirallist))_3;
+            if(|lastA-lastB|>0.1,
+              if(doinner,
+                childlist_(length(childlist))_1=samechild(lastA,lastB,lastk,lastmat,w);
+              ,
+                childlist_(length(childlist))_1=[[],[],false,[]];
+              );//end if doinner
+              if(doouter,
+                childlist_(length(childlist))_2=oppchild(lastA,lastB,lastk,lastmat,x);
+              ,
+                childlist_(length(childlist))_2=[[],[],false,[]];
+              ); //end if doouter
+            );//end if
+          );//end if
+        ); //end if lennew
+        childlist
+      ); //end spiralchild
+
+
+      samechild(lastA,lastB,lastk,lastmat,wang):=(
+        point0=fspiral(-lastk/abs(lastk)*wang,lastA,lastB,lastk,lastmat);
+        point1=fspiral(-lastk/abs(lastk)*(wang+2*pi),lastA,lastB,lastk,lastmat);
+
+        a=|point1-point0|/(1+exp(-abs(lastk)*pi));
+        newB=point0;
+        newk=lastk;
+        newA=point0+a/|point1-point0|*(point1-point0);
+
+        v=newA-newB;
+        w=[1,0];
+        testang=arccos((v*w)/(|v|*|w|));
+        if(newA_2<newB_2,
+          bang=pi-testang;
+        ,
+          bang=pi+testang;
+        );//end if
+        newmat=[[cos(bang),-1*sin(bang)],[sin(bang),cos(bang)]];
+        ret=[newA,newB,newk,newmat];
+        ret
+      ); //end samechild
+
+      oppchild(lastA,lastB,lastk,lastmat,x):=(
+
+        point0=fspiral(-lastk/abs(lastk)*x,lastA,lastB,lastk,lastmat);
+        newB=point0;
+        point1=fspiral(-lastk/abs(lastk)*(x+0.01),lastA,lastB,lastk,lastmat);
+        tanv=point1-point0;
+        tanvp=[-tanv_2,tanv_1];
+        paraperp=join(lastA,lastA+tanvp);
+        hpt=meet(join(point0,point1),paraperp).xy;
+        Pmi=lastA+2*(hpt-lastA);
+        spto=fspiral(-lastk/abs(lastk)*(x+2*pi),lastA,lastB,lastk,lastmat);
+        ao=(exp(abs(lastk)*pi))/(exp(abs(lastk)*pi)+1)*|spto-point0|;
+
+        newA=newB+ao/|Pmi-newB|*(Pmi-newB);
+
+        newk=-lastk;
+
+        v=newA-newB;
+        w=[1,0];
+        testang=arccos((v*w)/(|v|*|w|));
+        if(newA_2<newB_2,
+          bang=pi-testang;
+        ,
+          bang=pi+testang;
+        );//end if
+        newmat=[[cos(bang),-1*sin(bang)],[sin(bang),cos(bang)]];
+
+        ret=[newA,newB,newk,newmat];
+        ret
+
+      ); //end oppchild
+
+
+      fcircnew(m, eps,eps2, equimidpt, circlist, circ1, lastmid, lastrad, radmean,
+        lenold,seclastmid,penforceVal,spirallist,kval,dosingle,dodouble,same,opp,dointer):=(
+        if(m==1,
+          circlist=concat(circlist,[[equimidpt_1_1,equimidpt_1_2]]);
+          if(dosingle,
+            spirallist=concat(spirallist,[[equimidpt_1_1,equimidpt_1_1,kval,[],0]]);
+          ); //end if dosingle
+          if(or(dodouble,dointer),
+            spirallist=concat(spirallist,[[equimidpt_1_1,equimidpt_1_1,equimidpt_1_1,equimidpt_1_1,kval,[],[],0]]);
+          ); //end if dodouble or dointer
+
+          circ1=-1;
+          lastmid=equimidpt_1_1;
+          lastrad=equimidpt_1_2;
+          radmean=0;
+        );//end if m==0
+
+        if(m>=2,
+          if(dodouble,
+            if(same,
+              spirallist=doublesame(penforceVal,m,spirallist,equimidpt,kval,0);
+            );
+            if(opp,
+              spirallist=doublesame(penforceVal,m,spirallist,equimidpt,kval,1);
+            );
+          );//end if dodouble
+          if(dointer,
+            if(same,
+              spirallist=intersame(penforceVal,m,spirallist,equimidpt,kval,0);
+            );
+            if(opp,
+              spirallist=intersame(penforceVal,m,spirallist,equimidpt,kval,1);
+            );
+          );//end if dodouble
+          if(dosingle,
+            spirallist=singlespiral(penforceVal,m,spirallist,equimidpt);
+          );//end if dosingle
+        );//end if m>=1
+        resultf=[circlist,  circ1, lastmid, lastrad, radmean,lenold,seclastmid,spirallist];
+        resultf
+      ); //end fcircnew
+
+      singlespiral(penforceVal,m,spirallist,equimidpt):=(
+        a=penforceVal;
+        lastdist=|spirallist_(-1)_1-spirallist_(-1)_2|;
+        if(spirallist_(-1)_5==0,
+          if(and(lastdist<a  , abs(lastdist-a)>0.01),
+            newd=|equimidpt_m_1-spirallist_(-1)_2|;
+            if(or(newd<a , abs(newd-a)<=0.01),
+              spirallist_(-1)_1=equimidpt_m_1;
+              aktA=spirallist_(-1)_1;
+              aktB=spirallist_(-1)_2;
+              v=(aktA-aktB);
+              w=(1,0);
+              testang=arccos((v*w)/(|v|*|w|));
+              if(aktA_2<aktB_2,
+                bang=pi-testang;
+              ,
+                bang=pi+testang;
+              ); //end if aktAB
+              mat=[[cos(bang),-1*sin(bang)],[sin(bang),cos(bang)]];
+              spirallist_(length(spirallist))_4=mat;
+              if(abs(newd-a)<=0.01,
+                spirallist_(length(spirallist))_5=1;
+                newk=-spirallist_(length(spirallist))_3;
+                spirallist=concat(spirallist,[[equimidpt_m_1,equimidpt_m_1,newk,[],-1]]);
+              ); //end if
+
+            , //search in interval
+              l=-1;
+              num=500;
+              repeat(num,
+                l=l+1;
+                if(l<=num,
+                  vec=equimidpt_m_1-spirallist_(length(spirallist))_1;
+                  potA=spirallist_(length(spirallist))_1+l/num*vec;
+                  potdist=|spirallist_(length(spirallist))_2-potA|;
+                  if(abs(potdist-a)<=0.1,
+                    spirallist_(length(spirallist))_1=potA;
+                    spirallist_(length(spirallist))_5==1;
+                    l=num+50;
+                  ); //end if
+                );//end if l<=num
+              ); //end repeat
+
+              aktA=spirallist_(length(spirallist))_1;
+              aktB=spirallist_(length(spirallist))_2;
+              v=(aktA-aktB);
+              w=[1,0];
+              testang=arccos((v*w)/(|v|*|w|));
+              if(aktA_2<aktB_2,
+                bang=pi-testang;
+              ,
+                bang=pi+testang;
+              ); //end if
+              mat=[[cos(bang),-1*sin(bang)],[sin(bang),cos(bang)]];
+              spirallist_(length(spirallist))_4=mat;
+              newk=-spirallist_(length(spirallist))_3;
+              spirallist_(length(spirallist))_5=1;
+              spirallist=concat(spirallist,[[equimidpt_m_1,equimidpt_m_1,newk,[],-1]]);
+
+            );//end if newdist
+          );//end if lastdist<a...
+        );//end if ==0
+        // subsequent spirals after the first
+        if(spirallist_(length(spirallist))_5==-1,
+
+          lastB=spirallist_(-2)_2;
+          lastA=spirallist_(-2)_1;
+          u1=(lastB-lastA);
+          u2=(equimidpt_m_1-lastA);
+          angnew=arccos((u1*u2)/(|u1|*|u2|));
+          u1n=(-u1_2,u1_1);
+          testval=(u1n*u2);
+          aold=|spirallist_(-2)_1-spirallist_(-2)_2|;
+          lastk=spirallist_(-2)_3;
+          if(testval>=0,
+            if(lastk<0,
+              angnew=+angnew;
+            ,
+              angnew=2*pi-angnew;
+            );
+          ,
+            if(lastk<0,
+              angnew=2*pi-angnew;
+            ,
+              angnew=angnew;
+            );
+          );
+          r=aold*exp(-abs(lastk)*angnew);
+          testdist=|equimidpt_m_1-lastA|;
+          if(r<testdist,
+            lastmat=spirallist_(length(spirallist)-1)_4;
+            newB=fspiral(-lastk/abs(lastk)*angnew,lastA,lastB,lastk,lastmat);
+            found=false;
+
+            l=-1;
+            num=500;
+            repeat(num,
+              l=l+1;
+              if(l<=num,
+                if(found==false,
+                  pttest=fspiral(-lastk/abs(lastk)*(angnew-l*0.01),lastA,lastB,lastk,lastmat);
+                  pttest2=fspiral(-lastk/abs(lastk)*(angnew-l*0.01-0.001),lastA,lastB,lastk,lastmat);
+                  vectang=(pttest-pttest2);
+                  vecnew=(newB-equimidpt_m_1);
+                  angtest=arccos((vectang*vecnew)/(|vectang|*|vecnew|));
+                  angref=arccos((vectang*(newB-lastA))/(|vectang|*|newB-lastA|));
+                  if(abs(angtest-angref)<0.01,
+                    found=true;
+                    l=num+50;
+                    newB=pttest;
+                  ); //end if
+                ); //end if found
+              );//end if l
+            ); //end repeat
+            potdist=|newB-equimidpt_m_1|;
+            if(potdist<a,
+              spirallist_(-1)_1=equimidpt_m_1;
+              spirallist_(-1)_2=newB;
+              newA=equimidpt_m_1;
+              newB=newB;
+              v=(newA-newB);
+              w=[1,0];
+              testang=arccos((v*w)/(|v|*|w|));
+              if(newA_2<newB_2,
+                bang=pi-testang;
+              ,
+                bang=pi+testang;
+              );
+              mat=[[cos(bang),-1*sin(bang)],[sin(bang),cos(bang)]];
+              spirallist_(-1)_4=mat;
+              if(abs(potdist-a)<=0.05,
+                spirallist_(-1)_5=1;
+                newk=-spirallist_(-1)_3;
+                spirallist=concat(spirallist,[[equimidpt_m_1,equimidpt_m_1,newk,[],-1]]);
+              );
+            ,//else search for point in interval
+              l=-1;
+              num=500;
+              repeat(num,
+                l=l+1;
+                if(l<=num,
+                vec=(equimidpt_m_1-spirallist_(length(spirallist))_1);
+                potA=(spirallist_(-1)_1+(l/num*vec));
+                lastB=spirallist_(-2)_2;
+                lastA=spirallist_(-2)_1;
+                u1=(lastB-lastA);
+                u2=(equimidpt_m_1-lastA);
+                angnew=arccos((u1*u2)/(|u1|*|u2|));
+                u1n=(-u1_2,u1_1);
+                testval=(u1n*u2);
+                aold=|spirallist_(-2)_1,spirallist_(-2)_2|;
+                lastk=spirallist_(-2)_3;
+                if(testval>=0,
+                  if(lastk<0,
+                    angnew=+angnew;
+                  ,
+                    angnew=2*pi-angnew;
+                  );
+                ,
+                  if(lastk<0,
+                    angnew=2*pi-angnew;
+                  ,
+                    angnew=angnew;
+                  );
+                );
+                lastmat=spirallist_(-2)_4;
+                newB=fspiral(-lastk/abs(lastk)*angnew,lastA,lastB,lastk,lastmat);
+
+                found=false;
+                n=-1;
+                num2=500;
+                repeat(num2,
+                  n=n+1;
+                  if(n<=num2,
+                  if(found==false,
+                    pttest=fspiral(-lastk/abs(lastk)*(angnew-n*0.01),lastA,lastB,lastk,lastmat);
+                    pttest2=fspiral(-lastk/abs(lastk)*(angnew-n*0.01-0.01),lastA,lastB,lastk,lastmat);
+
+                    vectang=(pttest-pttest2);
+                    vecnew=(newB-potA);
+                    angtest=arccos((vectang*vecnew)/(|vectang|*|vecnew|));
+                    angref=arccos((vectang*(newB-lastA))/(|vectang|*|(newB-lastA)|));
+                    if(abs(angtest-angref)<0.1,
+                      found=true;
+                      n=num2+50;
+                      newB=pttest;
+                    );
+                  ); //end if found
+                );//end if n
+                ); //end repeat
+                newpotdist=|newB-potA|;
+                if(abs(newpotdist-a)<=0.05,
+                  spirallist_(-1)_1=potA;
+                  spirallist_(-1)_2=newB;
+
+                  v=(potA-newB);
+                  w=[1,0];
+                  testang=arccos((v*w)/(|v|*|w|));
+                  if(potA_2<newB_2,
+                    bang=pi-testang;
+                  ,
+                    bang=pi+testang;
+                  );
+                  mat=[[cos(bang),-1*sin(bang)],[sin(bang),cos(bang)]];
+                  spirallist_(-1)_4=mat;
+                  spirallist_(-1)_5==1;
+                  l=num+50;
+                ); //end if
+              );//end if
+              ); //end repeat
+              spirallist=concat(spirallist,[[equimidpt_m_1,equimidpt_m_1,-spirallist_(-1)_3,[],-1]]);
+            ); //end elsecase potdist
+          ); //end if r<testdist
+        );//end if ==-1
+        spirallist
+      ); //end function singlespiral
+
+
+      doublesame(penforceVal,m,spirallist,equimidpt,kval,oppvar):=(
+
+        a=penforceVal;
+        if(spirallist_(-1)_8==0,
+          if(oppvar==1,
+            kval=spirallist_(-1)_5;
+          );
+          nextC=equimidpt_m_1;
+          newd=|spirallist_(-1)_1-nextC|;
+          if(or(newd<3*a , abs(newd-3*a)<=0.01),
+            aktC=spirallist_(-1)_1;
+            aktB=aktC+1/2*(nextC-aktC);
+            spirallist_(-1)_3=aktB;
+
+            v=(aktB-aktC);
+            w=[1,0];
+            testang=arccos((v*w)/(|v|*|w|));
+            if(aktB_2<aktC_2,
+              bang=pi-testang;
+            ,
+              bang=pi+testang;
+            );
+            mat2=[[cos(bang),-1*sin(bang)],[sin(bang),cos(bang)]];
+            mat1=[[cos(bang+pi),-1*sin(bang+pi)],[sin(bang+pi),cos(bang+pi)]];
+            pol1=aktB+(exp(abs(kval)*pi))/(exp(abs(kval)*pi)+1)*(aktC-aktB);
+            spirallist_(-1)_2=pol1;
+            pol2=aktB+(exp(abs(kval)*pi))/(exp(abs(kval)*pi)+1)*(aktB-aktC);
+            spirallist_(-1)_4=pol2;
+            spirallist_(-1)_6=mat1;
+            spirallist_(-1)_7=mat2;
+            if(abs(newd-3*a)<=0.01,
+              spirallist_(-1)_8=1;
+              if(oppvar==1,
+                knew=-kval;
+                spirallist=concat(spirallist,[[equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,knew,[],[],-1]]);
+              ,//same
+                spirallist=concat(spirallist,[[equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,kval,[],[],-1]]);
+              );//end if oppvar
+            );
+
+          ,//search in interval
+            l=-1;
+            num=500;
+            repeat(num,
+              l=l+1;
+              if(l<=num,
+                vec=(equimidpt_m_1-spirallist_(-1)_3);
+                potC=equimidpt_(m-1)_1+l/num*vec;
+                aktC=spirallist_(-1)_1;
+
+                potdist=|aktC-potC|;
+                if(abs(potdist-3*a)<=0.01,
+                  potB=aktC+1/2*(potC-aktC);
+                  spirallist_(-1)_3=potB;
+                  spirallist_(-1)_8==1;
+                  l=num+50;
+                ); //end if
+              ); //end if l<=num
+            );//end repeat
+
+            aktB=spirallist_(-1)_3;
+            aktC=spirallist_(-1)_1;
+            v=(aktB-aktC);
+            w=[1,0];
+            testang=arccos((v*w)/(|v|*|w|));
+            if(aktB_2<aktC_2,
+              bang=pi-testang;
+            ,
+              bang=pi+testang;
+            );
+            mat2=[[cos(bang),-1*sin(bang)],[sin(bang),cos(bang)]];
+            mat1=[[cos(bang+pi),-1*sin(bang+pi)],[sin(bang+pi),cos(bang+pi)]];
+            pol1=aktB+(exp(abs(kval)*pi))/(exp(abs(kval)*pi)+1)*(aktC-aktB);
+            spirallist_(-1)_2=pol1;
+            pol2=aktB+(exp(abs(kval)*pi))/(exp(abs(kval)*pi)+1)*(aktB-aktC);
+            spirallist_(-1)_4=pol2;
+            spirallist_(-1)_6=mat1;
+            spirallist_(-1)_7=mat2;
+            spirallist_(-1)_8=1;
+            if(oppvar==1,
+              knew=-kval;
+              spirallist=concat(spirallist,[[equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,knew,[],[],-1]]);
+            ,//same
+              spirallist=concat(spirallist,[[equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,kval,[],[],-1]]);
+            );//end if oppvar
+          );//end if newdist
+        );//end if ==0
+
+        // subsequent spirals after the first
+        if(spirallist_(length(spirallist))_8==-1,
+          if(oppvar==1,
+            kval=spirallist_(-1)_5;
+          );
+          lastB=spirallist_(-2)_3;
+          lastA=spirallist_(-2)_4;
+          u1=(lastB-lastA);
+          u2=(equimidpt_m_1-lastA);
+          angnew=arccos((u1*u2)/(|u1|*|u2|));
+          u1n=[-u1_2,u1_1];
+          testval=(u1n*u2);
+          aold=|spirallist_(-2)_3,spirallist_(-2)_4|;
+          lastk=spirallist_(-2)_5;
+          if(testval>=0,
+            if(lastk<0,
+              angnew=+angnew;
+            ,
+              angnew=2*pi-angnew;
+            );
+          ,
+            if(lastk<0,
+              angnew=2*pi-angnew;
+            ,
+              angnew=angnew;
+            );
+          );
+          r=aold*exp(-abs(lastk)*angnew);
+          testdist=|equimidpt_m_1-lastA|;
+          if(r<testdist,
+            lastmat=spirallist_(length(spirallist)-1)_7;
+            newC=fspiral(-lastk/abs(lastk)*angnew,lastA,lastB,lastk,lastmat);
+            nextC=equimidpt_m_1;
+            if(oppvar==1,
+              found=false;
+              l=-1;
+              num=500;
+              repeat(num,
+                l=l+1;
+                if(l<=num,
+                  if(found==false,
+                    pttest=fspiral(-lastk/abs(lastk)*(angnew-l*0.01),lastA,lastB,lastk,lastmat);
+                    pttest2=fspiral(-lastk/abs(lastk)*(angnew-l*0.01-0.01),lastA,lastB,lastk,lastmat);
+                    vectang=(pttest-pttest2);
+                    vecnew=(newC-equimidpt_m_1);
+                    angtest=arccos((vectang*vecnew)/(|vectang|*|vecnew|));
+                    angref=arccos((vectang*(newC-lastA))/(|vectang|*|newC-lastA|));
+                    if(abs(angtest-angref)<0.01,
+                      found=true;
+                      l=num+50;
+                      newC=pttest;
+                    );
+                  ); //end if found
+                );//end if l
+              ); //end repeat
+            ); //end if oppvar
+
+            potdist=|newC-nextC|;
+            if(potdist<3*a,
+              newB=(newC+(1/2*(nextC-newC)));
+              pol1=(newB+((exp(abs(kval)*pi))/(exp(abs(kval)*pi)+1)*(newC-newB)));
+              pol2=(newB+((exp(abs(kval)*pi))/(exp(abs(kval)*pi)+1)*(newB-newC)));
+
+              spirallist_(-1)_1=newC;
+              spirallist_(-1)_2=pol1;
+              spirallist_(-1)_3=newB;
+              spirallist_(-1)_4=pol2;
+              newA=pol1;
+              newB=newB;
+              v=(newA-newB);
+              w=[1,0];
+              testang=arccos((v*w)/(|v|*|w|));
+              if(newA_2<newB_2,
+                bang=pi-testang;
+              ,
+                bang=pi+testang;
+              );
+              mat1=[[cos(bang),-1*sin(bang)],[sin(bang),cos(bang)]];
+              mat2=[[cos(bang+pi),-1*sin(bang+pi)],[sin(bang+pi),cos(bang+pi)]];
+              spirallist_(-1)_6=mat1;
+              spirallist_(-1)_7=mat2;
+              if(abs(potdist-3*a)<=0.1,
+                spirallist_(-1)_8=1;
+                if(oppvar==1,
+                  knew=-kval;
+                  spirallist=concat(spirallist,[[equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,knew,[],[],-1]]);
+                ,//same
+                  newk=spirallist_(-1)_5;
+                  spirallist=concat(spirallist,[[equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,kval,[],[],-1]]);
+                );//end if oppvar
+              );
+            ,//else search for point on interval
+              l=-1;
+              num=600;
+              repeat(num,
+                l=l+1;
+                if(l<=num,
+                  vec=(equimidpt_m_1-spirallist_(-1)_3);
+                  potC=(spirallist_(-1)_3+(l/num*vec));
+                  if(oppvar==1,
+                    lastB=spirallist_(-2)_3;
+                    lastA=spirallist_(-2)_4;
+                    u1=(lastB-lastA);
+                    u2=(equimidpt_m_1-lastA);
+                    angnew=arccos((u1*u2)/(|u1|*|u2|));
+                    u1n=[-u1_2,u1_1];
+                    testval=(u1n*u2);
+                    aold=|spirallist_(-2)_3-spirallist_(-2)_4|;
+                    lastk=spirallist_(-2)_5;
+                    if(testval>=0,
+                      if(lastk<0,
+                        angnew=+angnew;
+                      ,
+                        angnew=2*pi-angnew;
+                      );
+                    ,
+                      if(lastk<0,
+                        angnew=2*pi-angnew;
+                      ,
+                        angnew=angnew;
+                      );
+                    );
+
+                    newC=fspiral(-lastk/abs(lastk)*angnew,lastA,lastB,lastk,lastmat);
+                    lastmat=spirallist_(-2)_7;
+                    found=false;
+                    n=-1;
+                    num2=500;
+                    repeat(num2,
+                      n=n+1;
+                      if(n<=num2,
+                        if(found==false,
+                          pttest=fspiral(-lastk/abs(lastk)*(angnew-n*0.01),lastA,lastB,lastk,lastmat);
+                          pttest2=fspiral(-lastk/abs(lastk)*(angnew-n*0.01-0.001),lastA,lastB,lastk,lastmat);
+                          vectang=(pttest-pttest2);
+                          vecnew=(newC-equimidpt_m_1);
+                          angtest=arccos((vectang*vecnew)/(|vectang|*|vecnew|));
+                          angref=arccos((vectang*(newC-lastA))/(|vectang|*|newC-lastA|));
+                          if(abs(angtest-angref)<0.01,
+                            found=true;
+                            n=num2+50;
+                            newC=pttest;
+                          );
+                        ); //end if found
+                      );//end if n
+                    ); //end repeat
+                  );//end if oppvar
+                  newpotdist=|newC-potC|;
+                  if(abs(newpotdist-3*a)<=0.05,
+                    newB=(newC+(1/2*(potC-newC)));
+                    pol1=(potB+((exp(abs(kval)*pi))/(exp(abs(kval)*pi)+1)*(newC-potB)));
+                    pol2=(potB+((exp(abs(kval)*pi))/(exp(abs(kval)*pi)+1)*(potB-newC)));
+
+                    spirallist_(-1)_1=newC;
+                    spirallist_(-1)_2=pol1;
+                    spirallist_(-1)_3=potB;
+                    spirallist_(-1)_4=pol2;
+
+                    v=(pol1-potB);
+                    w=[1,0];
+                    testang=arccos((v*w)/(|v|*|w|));
+                    if(pol1_2<potB_2,
+                      bang=pi-testang;
+                    ,
+                      bang=pi+testang;
+                    );
+                    mat1=[[cos(bang),-1*sin(bang)],[sin(bang),cos(bang)]];
+                    mat2=[[cos(bang+pi),-1*sin(bang+pi)],[sin(bang+pi),cos(bang+pi)]];
+                    spirallist_(-1)_6=mat1;
+                    spirallist_(-1)_7=mat2;
+                    spirallist_(-1)_8==1;
+                    l=num+50;
+                  ); //end if
+                );//end if
+              ); //end repeat
+              //new spiral
+              if(oppvar==1,
+                knew=-kval;
+                spirallist=concat(spirallist,[[equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,knew,[],[],-1]]);
+              ,//same
+                spirallist=concat(spirallist,[[equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,kval,[],[],-1]]);
+              );//end if oppvar
+            ); //end elsecase potdist
+          ); //end if r<testdist
+        );//end if ==-1
+
+        spirallist
+      ); //end function doublesame
+
+      intersame(penforceVal,m,spirallist,equimidpt,kval,interopp):=(
+        a=penforceVal;
+        if(spirallist_(-1)_8==0,
+          if(interopp==1,
+            kval=spirallist_(-1)_5;
+          );
+            nextP=equimidpt_m_1;
+            spirallist_(-1)_4=nextP;
+            newd=1/(exp(-abs(kval)*2*pi)+exp(-abs(kval)*pi)+1)*|spirallist_(-1)_1-nextP|;
+            if(or(newd<a , abs(newd-a)<=0.01),
+              aktC=spirallist_(-1)_1;
+              pol1=(aktC+(exp(-abs(kval)*pi)/(exp(-abs(kval)*2*pi)+exp(-abs(kval)*pi)+1)*(nextP-aktC)));
+              spirallist_(-1)_2=pol1;
+              aktB=(pol1+(1/(exp(-abs(kval)*2*pi)+exp(-abs(kval)*pi)+1)*(nextP-aktC)));
+              spirallist_(-1)_3=aktB;
+              nextB=(pol1+(exp(-abs(kval)*2*pi)/(exp(-abs(kval)*2*pi)+exp(-abs(kval)*pi)+1)*(nextP-aktC)));
+
+              v=(aktB-aktC);
+              w=[1,0];
+              testang=arccos((v*w)/(|v|*|w|));
+              if(aktB_2<aktC_2,
+                bang=pi-testang;
+              ,
+                bang=pi+testang;
+              );
+              mat2=[[cos(bang),-1*sin(bang)],[sin(bang),cos(bang)]];
+              mat1=[[cos(bang+pi),-1*sin(bang+pi)],[sin(bang+pi),cos(bang+pi)]];
+
+              spirallist_(-1)_6=mat1;
+              spirallist_(-1)_7=mat2;
+              if(abs(newd-a)<=0.01,
+                spirallist_(-1)_8=1;
+                if(interopp==1,
+                  knew=-kval;
+                  spirallist=concat(spirallist,[[equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,knew,[],[],-1]]);
+                ,//same
+                  spirallist=concat(spirallist,[[equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,kval,[],[],-1]]);
+                );//end if interopp
+              );
+
+            ,//search in interval
+              l=-1;
+              num=500;
+              repeat(num,
+                l=l+1;
+                if(l<=num,
+                  vec=(equimidpt_m_1-spirallist_(-1)_3);
+                  potP=(equimidpt_(m-1)_1+(l/num*vec));
+                  aktC=spirallist_(-1)_1;
+                  potdist=1/(exp(-abs(kval)*2*pi)+exp(-abs(kval)*pi)+1)*|aktC-potP|;
+                  if(abs(potdist-a)<=0.01,
+                    spirallist_(-1)_4=potP;
+                    spirallist_(-1)_8==1;
+                    l=num+50;
+                  ); //end if
+                );//end if l
+              ); //end repeat
+
+              nextP=spirallist_(-1)_4;
+              aktC=spirallist_(-1)_1;
+              pol1=(aktC+(exp(-abs(kval)*pi)/(exp(-abs(kval)*2*pi)+exp(-abs(kval)*pi)+1)*(nextP-aktC)));
+              spirallist_(-1)_2=pol1;
+              aktB=(pol1+(1/(exp(-abs(kval)*2*pi)+exp(-abs(kval)*pi)+1)*(nextP-aktC)));
+              spirallist_(-1)_3=aktB;
+              nextB=(pol1+(exp(-abs(kval)*2*pi)/(exp(-abs(kval)*2*pi)+exp(-abs(kval)*pi)+1)*(nextP-aktC)));
+
+              v=(aktB-aktC);
+              w=[1,0];
+              testang=arccos((v*w)/(|v|*|w|));
+              if(aktB_2<aktC_2,
+                bang=pi-testang;
+              ,
+                bang=pi+testang;
+              );
+              mat2=[[cos(bang),-1*sin(bang)],[sin(bang),cos(bang)]];
+              mat1=[[cos(bang+pi),-1*sin(bang+pi)],[sin(bang+pi),cos(bang+pi)]];
+              spirallist_(-1)_6=mat1;
+              spirallist_(-1)_7=mat2;
+              spirallist_(-1)_8=1;
+              if(interopp==1,
+                knew=-kval;
+                spirallist=concat(spirallist,[[equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,knew,[],[],-1]]);
+              ,//same
+                spirallist=concat(spirallist,[[equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,kval,[],[],-1]]);
+              );//end if interopp
+            );//end if newdist
+        );//end if ==0
+        // subsequent spirals after the first
+        if(spirallist_(-1)_8==-1,
+          if(interopp==1,
+            kval=spirallist_(-1)_5;
+          );
+          lastA=spirallist_(-2)_4;
+          lastB=(spirallist_(-2)_2+(exp(-abs(kval)*2*pi)/(exp(-abs(kval)*2*pi)+exp(-abs(kval)*pi)+1)*(lastA-spirallist_(-2)_1)));
+
+          u1=(lastB-lastA);
+          u2=(equimidpt_m_1-lastA);
+          angnew=arccos((u1*u2)/(|u1|*|u2|));
+          u1n=[-u1_2,u1_1];
+          testval=(u1n*u2);
+          aold=|spirallist_(-2)_3-spirallist_(-2)_2|;
+          lastk=spirallist_(-2)_5;
+
+          if(testval>=0,
+            if(lastk<0,
+              angnew=+angnew;
+            ,
+              angnew=2*pi-angnew;
+            );
+          ,
+            if(lastk<0,
+              angnew=2*pi-angnew;
+            ,
+              angnew=angnew;
+            );
+          );
+          r=aold*exp(-abs(lastk)*angnew);
+          testdist=|equimidpt_m_1-lastA|;
+
+          if(r<testdist,
+            lastmat=spirallist_(-2)_7;
+            newC=fspiral(-lastk/abs(lastk)*angnew,lastA,lastB,lastk,lastmat);
+            if(interopp==1,
+              found=false;
+              l=-1;
+              num=500;
+              repeat(num,
+                l=l+1;
+                if(l<=num,
+                  if(found==false,
+                    pttest=fspiral(-lastk/abs(lastk)*(angnew-l*0.01),lastA,lastB,lastk,lastmat);
+                    pttest2=fspiral(-lastk/abs(lastk)*(angnew-l*0.01-0.001),lastA,lastB,lastk,lastmat);
+                    vectang=(pttest-pttest2);
+                    vecnew=(newC-equimidpt_m_1);
+                    angtest=arccos((vectang*vecnew)/(|vectang|*|vecnew|));
+                    angref=arccos((vectang*(newC-lastA))/(|vectang|*|newC-lastA|));
+                    if(abs(angtest-angref)<0.01,
+                      found=true;
+                      l=num+50;
+                      newC=pttest;
+                    );
+                  ); //end if found
+                );//end if l
+              ); //end repeat
+            );//end if interopp
+            spirallist_(-1)_1=newC;
+            nextP=equimidpt_m_1;
+            spirallist_(-1)_4=nextP;
+
+            potdist=1/(exp(-abs(kval)*2*pi)+exp(-abs(kval)*pi)+1)*|newC-nextP|;
+
+            if(potdist<a,
+              pol1=(newC+(exp(-abs(kval)*pi)/(exp(-abs(kval)*2*pi)+exp(-abs(kval)*pi)+1)*(nextP-newC)));
+              spirallist_(-1)_2=pol1;
+              aktB=(pol1+(1/(exp(-abs(kval)*2*pi)+exp(-abs(kval)*pi)+1)*(nextP-newC)));
+              spirallist_(-1)_3=aktB;
+              nextB=(pol1+(exp(-abs(kval)*2*pi)/(exp(-abs(kval)*2*pi)+exp(-abs(kval)*pi)+1)*(nextP-newC)));
+
+              newA=pol1;
+              newB=aktB;
+              v=(newA-newB);
+              w=[1,0];
+              testang=arccos((v*w)/(|v|*|w|));
+              if(newA_2<newB_2,
+                bang=pi-testang;
+              ,
+                bang=pi+testang;
+              );
+              mat1=[[cos(bang),-1*sin(bang)],[sin(bang),cos(bang)]];
+              mat2=[[cos(bang+pi),-1*sin(bang+pi)],[sin(bang+pi),cos(bang+pi)]];
+              spirallist_(-1)_6=mat1;
+              spirallist_(-1)_7=mat2;
+              if(abs(potdist-a)<=0.05,
+                spirallist_(-1)_8=1;
+                //new spiral
+                if(interopp==1,
+                  knew=-kval;
+                  spirallist=concat(spirallist,[[equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,knew,[],[],-1]]);
+                ,//same
+                  newk=spirallist_(-1)_5;
+                  spirallist=concat(spirallist,[[equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,kval,[],[],-1]]);
+                );//end if interopp
+              );
+            ,//else search on the last interval
+              l=-1;
+              num=500;
+              repeat(num,
+                l=l+1;
+                if(l<=num,
+
+                  vec=(equimidpt_m_1-spirallist_(-1)_4);
+                  potP=(spirallist_(-1)_4+(l/num*vec));
+                  if(interopp==1,
+                    newC=fspiral(-lastk/abs(lastk)*angnew,lastA,lastB,lastk,lastmat);
+                    found=false;
+                    n=-1;
+                    num2=500;
+                    repeat(num2,
+                      n=n+1;
+                      if(n<=num2,
+                        if(found==false,
+                          pttest=fspiral(-lastk/abs(lastk)*(angnew-n*0.01),lastA,lastB,lastk,lastmat);
+                          pttest2=fspiral(-lastk/abs(lastk)*(angnew-n*0.01-0.001),lastA,lastB,lastk,lastmat);
+                          vectang=(pttest-pttest2);
+                          vecnew=(newC-potP);
+                          angtest=arccos((vectang*vecnew)/(|vectang|*|vecnew|));
+                          angref=arccos((vectang*(newC-lastA))/(|vectang|*|newC-lastA|));
+                          if(abs(angtest-angref)<0.01,
+                            found=true;
+                            n=num2+50;
+                            newC=pttest;
+                          );
+                        ); //end if found
+                      );//end if n
+                    ); //end repeat
+                    spirallist_(-1)_1=newC;
+                  );//end if interopp
+
+                  newpotdist=1/(exp(-abs(kval)*2*pi)+exp(-abs(kval)*pi)+1)*|newC-potP|;
+                  if(abs(newpotdist-a)<=0.05,
+                    nextP=potP;
+                    spirallist_(-1)_4=nextP;
+                    pol1=(newC+(exp(-abs(kval)*pi)/(exp(-abs(kval)*2*pi)+exp(-abs(kval)*pi)+1)*(nextP-newC)));
+                    spirallist_(-1)_2=pol1;
+                    aktB=(pol1+(1/(exp(-abs(kval)*2*pi)+exp(-abs(kval)*pi)+1)*(nextP-newC)));
+                    spirallist_(-1)_3=aktB;
+                    nextB=(pol1+(exp(-abs(kval)*2*pi)/(exp(-abs(kval)*2*pi)+exp(-abs(kval)*pi)+1)*(nextP-newC)));
+
+                    v=(pol1-aktB);
+                    w=[1,0];
+                    testang=arccos((v*w)/(|v|*|w|));
+                    if(pol1_2<potB_2,
+                      bang=pi-testang;
+                    ,
+                      bang=pi+testang;
+                    );
+                    mat1=[[cos(bang),-1*sin(bang)],[sin(bang),cos(bang)]];
+                    mat2=[[cos(bang+pi),-1*sin(bang+pi)],[sin(bang+pi),cos(bang+pi)]];
+                    spirallist_(-1)_6=mat1;
+                    spirallist_(-1)_7=mat2;
+                    spirallist_(-1)_8==1;
+                    //leave loop
+                    l=num+50;
+                  ); //end if
+                );//end if l
+              ); //end repeat
+              //new spiral
+              if(interopp==1,
+                knew=-kval;
+                spirallist=concat(spirallist,[[equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,knew,[],[],-1]]);
+              ,
+                spirallist=concat(spirallist,[[equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,equimidpt_m_1,kval,[],[],-1]]);
+              );//end if interopp
+            ); //end elsecase potdist
+
+          ); //end if r<testdist
+
+        );//end if ==-1
+
+        spirallist
+      ); //end function intersame
+
+      calcopp(lastk,lastA,lastB,newC,newM):=(
+        found=false;
+        l=0;
+        repeat(500,
+          l=l+1;
+          if(l<=500,
+            if(found==false,
+              pttest=fspiral(-lastk/abs(lastk)*(pi-#*0.01),lastA,lastB,lastk,((-1,0),(0,-1)));
+              pttest2=fspiral(-lastk/abs(lastk)*(pi-#*0.01-0.001),lastA,lastB,lastk,((-1,0),(0,-1)));
+              vectang=pttest-pttest2;
+              vecnew=newC-newM;
+              angtest=arccos((vectang*vecnew)/(|vectang|*|vecnew|));
+              angref=arccos((vectang*(newC-lastA))/(|vectang|*|newC-lastA|));
+              if(abs(angtest-angref)<0.001,
+                found=true;
+                l=505;
+                newC=pttest;
+              );//end if
+            ); //end if found
+          ); //end if l<=
+        );//end repeat 500
+
+        pol1=newM+(exp(abs(lastk)*pi))/(exp(abs(lastk)*pi)+1)*(newC-newM);
+        pol2=newM+(exp(abs(lastk)*pi))/(exp(abs(lastk)*pi)+1)*(newM-newC);
+
+        (pol1,pol2)
+
+      );//end function calcopp
+
+
+    </script>
+
+    <script id="csmousedrag" type="text/x-cindyscript">
+
+      if(and(mouse().x<=-5, mouse().y>=-3.5),
+        k=-0.5+(Z.x-X.x)/(Y.x-X.x);
+        if(|k|<0.05,
+          if(|k|>0.0001,
+            k=k/|k|*0.05;
+          ,
+            k=0.0001;
+          );
+        );
+
+        clearimage("stamp");
+        canvas((0,0),(1,0),(0,1),"stamp",
+          plot(fspiral(-k/|k|*x,(0.5,0.5),(0.9,0.5),k,((1,0),(0,1))),start->0,stop->80,color->(0,0,1),size->1);
+        );
+        clearimage("stampneg");
+        canvas((0,0),(1,0),(0,1),"stampneg",
+          plot(fspiral(k/|k|*x,(0.5,0.5),(0.9,0.5),-k,((1,0),(0,1))),start->0,stop->80,color->(0,0,1),size->1);
+        );
+        opos=(Uo.x-Vo.x)/(Wo.x-Vo.x);
+        oval=opos*2*pi;
+        ipos=(Ui.x-Vi.x)/(Wi.x-Vi.x);
+        ival=ipos*2*pi;
+
+        if(doinner,
+          sti=fspiral(-k/|k|*ival,P,Q,k,((1,0),(0,1)));
+          spti=fspiral(-k/|k|*(ival+2*pi),P,Q,k,((1,0),(0,1)));
+          spi=sti+(exp(|k|*pi))/(exp(|k|*pi)+1)*(spti-sti);
+          v=spi-sti;
+          w=(1,0);
+          testang=arccos((v*w)/(|v|*|w|));
+          if(v_2<w_2,
+            bang=pi-testang;
+          ,
+            bang=pi+testang;
+          );
+          newmati=[[cos(bang),-sin(bang)],[sin(bang),cos(bang)]];
+        );
+        if(doouter,
+          sto=fspiral(-k/|k|*oval,P,Q,k,((1,0),(0,1)));
+          sto2=fspiral(-k/|k|*(oval+0.001),P,Q,k,((1,0),(0,1)));
+          tanv=sto2-sto;
+          tanvp=perp(tanv);
+          liperp=join(sto,sto+tanvp);
+          paraperp=para(liperp,P);
+          hpt=meet(join(sto,sto2),paraperp).xy;
+          Pmi=P+2*(hpt-P);
+          ao=(|P-Q|-|P-sto|)/(1+exp(-|k|*pi));
+          spto=fspiral(-k/|k|*(oval+2*pi),P,Q,k,((1,0),(0,1)));
+          ao=(exp(|k|*pi))/(exp(|k|*pi)+1)*|spto-sto|;
+          spo=sto+ao/|Pmi-sto|*(Pmi-sto);
+
+          v=spo-sto;
+          w=(1,0);
+          testang=arccos((v*w)/(|v|*|w|));
+          if(v_2<w_2,
+            bang=pi-testang;
+          ,
+            bang=pi+testang;
+          );
+          newmato=[[cos(bang),-sin(bang)],[sin(bang),cos(bang)]];
+        );
+      );//end if
+
+      if(and(mouse().x>=-5, mouse().y>=-3),
+        lastid=id;
+        id=multiid();
+        mouseOld=mouseVec;
+        mouseVec=mouse().xy;
+
+        if(and(lastid==1,id==0),
+          lastpenforce=0;);
+        if(and(id>=1,penforce()==0),
+          finger=1; ,finger=0;);
+
+        if(finger==1,
+          finres=fun(100, penaltitude(),lastpenforce, startnewlist, param,ptforcelist, equimidpt, circlist, collist,
+            spirallist, childlist, kindlist, mouseVec, eps, eps2, dosingle, doouter, dointer, oval, ival, doinner,
+            dodouble,same,opp,lastmid,lastrad,radmean,lenold,seclastmid);
+        ,
+          finres=fun(penforce(), penaltitude(),lastpenforce, startnewlist, param,ptforcelist, equimidpt, circlist, collist,
+            spirallist, childlist, kindlist, mouseVec, eps, eps2, dosingle, doouter, dointer, oval, ival,  doinner,
+            dodouble,same,opp,lastmid,lastrad,radmean,lenold,seclastmid);
+        );
+
+        lastpenforce=finres_1;
+        startnewlist=finres_2;
+        ptforcelist=finres_3;
+        equimidpt=finres_4;
+        circlist=finres_5;
+        circ1=finres_6;
+        collist=finres_7;
+        param=finres_8;
+        lastmid=finres_9;
+        lastrad=finres_10;
+        radmean=finres_11;
+        lenold=finres_12;
+        seclastmid=finres_13;
+        spirallist=finres_14;
+        childlist=finres_15;
+        kindlist=finres_16;
+      ); //end if
+
+    </script>
+
+    <script id="csmouseup" type="text/x-cindyscript">
+    lastpenforce=0;
+
+    </script>
+
+
+    <script id="csmousedown" type="text/x-cindyscript">
+
+    canvas((-5,-3),(20,-3),"storecanvas",
+      drawimage((-5,-3),(20,-3),"aktcanvas");
+    );
+    clearimage("aktcanvas");
+
+    </script>
+
+    <script id="csmouseclick" type="text/x-cindyscript">
+
+    if(|mouse().xy,Cs|<=Csc.radius,
+      if(dosingle,
+        dosingle=false;
+        dodouble=true;
+        dointer=false;
+      ,
+        dosingle=true;
+        dodouble=false;
+        dointer=false;
+      );
+    );
+    if(|mouse().xy,Cd|<=Cdc.radius,
+      if(dodouble,
+        dodouble=false;
+        dointer=true;
+        dosingle=false;
+      ,
+        dodouble=true;
+        dointer=false;
+        dosingle=false;
+      );
+    );
+    if(|mouse().xy,Cin|<=Cinc.radius,
+      if(dointer,
+        dointer=false;
+        dosingle=true;
+        dodouble=false;
+      ,
+      dointer=true;
+      dosingle=false;
+      dodouble=false;
+      );
+    );
+    if(dosingle,
+      P.xy=(-8.0,3.5);
+      if(|mouse().xy,Ci|<=Cic.radius,
+
+        if(doinner,
+          doinner=false;
+        ,
+          doinner=true;
+        );
+      );
+      ival=ipos*2*pi;
+      sti=fspiral(-k/|k|*ival,P,Q,k,((1,0),(0,1)));
+      spti=fspiral(-k/|k|*(ival+2*pi),P,Q,k,((1,0),(0,1)));
+      spi=sti+(exp(|k|*pi))/(exp(|k|*pi)+1)*(spti-sti);
+      v=spi-sti;
+      w=(1,0);
+      testang=arccos((v*w)/(|v|*|w|));
+      if(v_2<w_2,
+        bang=pi-testang;
+      ,
+        bang=pi+testang;
+      );
+      newmati=[[cos(bang),-sin(bang)],[sin(bang),cos(bang)]];
+      if(|mouse().xy,Co|<=Coc.radius,
+        if(doouter,
+          doouter=false;
+        ,
+          doouter=true;
+        );
+      );
+
+      oval=opos*2*pi;
+      sto=fspiral(-k/|k|*oval,P,Q,k,((1,0),(0,1)));
+      sto2=fspiral(-k/|k|*(oval+0.001),P,Q,k,((1,0),(0,1)));
+      tanv=sto2-sto;
+      tanvp=perp(tanv);
+      liperp=join(sto,sto+tanvp);
+      paraperp=para(liperp,P);
+      hpt=meet(join(sto,sto2),paraperp).xy;
+      Pmi=P+2*(hpt-P);
+      ao=(|P-Q|-|P-sto|)/(1+exp(-|k|*pi));
+      spto=fspiral(-k/|k|*(oval+2*pi),P,Q,k,((1,0),(0,1)));
+      ao=(exp(|k|*pi))/(exp(|k|*pi)+1)*|spto-sto|;
+      spo=sto+ao/|Pmi-sto|*(Pmi-sto);
+
+      vo=spo-sto;
+      wo=(1,0);
+      testango=arccos((vo*wo)/(|vo|*|wo|));
+      if(vo_2<wo_2,
+        bango=pi-testango;
+      ,
+        bango=pi+testango;
+      );
+      newmato=[[cos(bango),-sin(bango)],[sin(bango),cos(bango)]];
+    );
+    if(or(dodouble,dointer),
+      if(|mouse().xy,S|<=Sc.radius,
+        if(same,
+          same=false;
+          opp=true;
+        ,
+          same=true;
+          opp=false;
+        );
+      );
+      if(|mouse().xy,O|<=Oc.radius,
+        if(opp,
+          opp=false;
+          same=true;
+        ,
+          opp=true;
+          same=false;
+        );
+      );
+    );
+
+    </script>
+
+    <script id="csdraw" type="text/x-cindyscript">
+
+    drawimage((-5,-3),(20,-3),"storecanvas");
+
+    draw((-5,9.5),(20,9.5),size->3,color->(0,0,0));
+    draw((20,9.5),(20,-3),size->3,color->(0,0,0));
+    draw((-5,-3),(20,-3),size->3,color->(0,0,0));
+    draw((-5,-9.5),(-5,9.5),size->3,color->(0,0,0));
+
+    pol=[(-10,10),(-5,10),(-5,-3.5),(-10,-3.5)];
+    drawpoly(pol,color->(0,0,0),size->2);
+    fillpoly(pol,color->(0,0,0),alpha->0.15);
+    drawtext(T,"k = "+round(k*100)/100,offset->[20,-6],color->(0,0,1),bold->true,size->20);
+
+
+    if(dosingle,
+      forall(chooselist,
+        #.visible=false;
+      );
+      P.xy=(-8.0,3.5);
+
+      tam=map((0.5,0.5),(0.9,0.5),P,Q);
+      drawimage(tam*(0,0).homog,tam*(1,0).homog,"stamp");
+      fillcircle(Cs,Csc.radius,color->blue(0.7),alpha->1);
+      forall(invilist,
+        #.visible=true;
+      );
+      if(doinner,
+          fillcircle(Ci,Cic.radius,color->blue(0.7),alpha->1);
+
+          tami=map((0.5,0.5),(0.9,0.5),spi,sti);
+          drawimage(tami*(0,0).homog,tami*(1,0).homog,"stamp");
+          forall(drawlisti,
+            #.visible=true;
+          );
+        ,
+          fillcircle(Ci,Cic.radius,color->(0,0.6,0.9),alpha->1);
+          forall(drawlisti,
+            #.visible=false;
+          );
+        );
+        drawcircle(Ci-(0.05,0.05),Cic.radius,color->(1,1,1),alpha->0.7,size->6);
+
+        if(doouter,
+          fillcircle(Co,Coc.radius,color->blue(0.7),alpha->1);
+          tamo=map((0.5,0.5),(0.9,0.5),spo,sto);
+          drawimage(tamo*(0,0).homog,tamo*(1,0).homog,"stampneg");
+          forall(drawlisto,
+            #.visible=true;
+          );
+        ,
+          fillcircle(Co,Coc.radius,color->(0,0.6,0.9),alpha->1);
+          forall(drawlisto,
+            #.visible=false;
+          );
+        );
+        drawcircle(Co-(0.05,0.05),Coc.radius,color->(1,1,1),alpha->0.7,size->6);
+      ,
+        fillcircle(Cs,Csc.radius,color->(0,0.6,0.9),alpha->1);
+      );//end dosingle
+
+      if(dodouble,
+        forall(invilist,
+          #.visible=false;
+        );
+        forall(drawlisti,
+          #.visible=false;
+        );
+        forall(drawlisto,
+          #.visible=false;
+        );
+        forall(chooselist,
+          #.visible=true;
+        );
+        P.xy=(-8.5,3.5);
+
+        if(same,
+          fillcircle(S,Sc.radius,color->blue(0.7),alpha->1);
+        ,
+          fillcircle(S,Sc.radius,color->(0,0.6,0.9),alpha->1);
+        );
+        if(opp,
+          fillcircle(O,Oc.radius,color->blue(0.7),alpha->1);
+        ,
+          fillcircle(O,Oc.radius,color->(0,0.6,0.9),alpha->1);
+        );
+
+        tamdo1=map((0.5,0.5),(0.9,0.5),P,P+1/2*(Q-P));
+        drawimage(tamdo1*(0,0).homog,tamdo1*(1,0).homog,"stamp");
+        tamdo2=map((0.5,0.5),(0.9,0.5),Q,P+1/2*(Q-P));
+        drawimage(tamdo2*(0,0).homog,tamdo2*(1,0).homog,"stamp");
+        fillcircle(Cd,Cdc.radius,color->blue(0.7),alpha->1);
+        //choose spirals
+        drawcircle(S-(0.04,0.04),Sc.radius,color->(1,1,1),alpha->0.7,size->5);
+        drawcircle(O-(0.04,0.04),Oc.radius,color->(1,1,1),alpha->0.7,size->5);
+
+        //same k
+        tams1=map((0.5,0.5),(0.9,0.5),S1,S1+1/2*(S2-S1));
+        drawimage(tams1*(0,0).homog,tams1*(1,0).homog,"stamp");
+        tams2=map((0.5,0.5),(0.9,0.5),S2,S1+1/2*(S2-S1));
+        drawimage(tams2*(0,0).homog,tams2*(1,0).homog,"stamp");
+        Sh=fspiral(-k/|k|*pi,S2,S1+1/2*(S2-S1),k,((-1,0),(0,-1)));
+        S3=2*Sh-S2;
+        S4=S3+S2-S1;
+        tams3=map((0.5,0.5),(0.9,0.5),S3,S3+1/2*(S4-S3));
+        drawimage(tams3*(0,0).homog,tams3*(1,0).homog,"stamp");
+        tams4=map((0.5,0.5),(0.9,0.5),S4,S3+1/2*(S4-S3));
+        drawimage(tams4*(0,0).homog,tams4*(1,0).homog,"stamp");
+
+        //opposite k
+        tamop1=map((0.5,0.5),(0.9,0.5),O1,O1+1/2*(O2-O1));
+        drawimage(tamop1*(0,0).homog,tamop1*(1,0).homog,"stampneg");
+        tamop2=map((0.5,0.5),(0.9,0.5),O2,O1+1/2*(O2-O1));
+        drawimage(tamop2*(0,0).homog,tamop2*(1,0).homog,"stampneg");
+        Oh=fspiral(-k/|k|*pi,O2,O1+1/2*(O2-O1),k,((-1,0),(0,-1)));
+        Mnew=2*Oh-(O1+1/2*(O2-O1));
+        ret=calcopp(k,O2.xy,(O1+1/2*(O2-O1)).xy,Oh,Mnew);
+        pol1=ret_1;
+        pol2=ret_2;
+        tamop3=map((0.5,0.5),(0.9,0.5),pol1,Mnew);
+        drawimage(tamop3*(0,0).homog,tamop3*(1,0).homog,"stamp");
+        tamop4=map((0.5,0.5),(0.9,0.5),pol2,Mnew);
+        drawimage(tamop4*(0,0).homog,tamop4*(1,0).homog,"stamp");
+      ,
+        fillcircle(Cd,Cdc.radius,color->(0,0.6,0.9),alpha->1);
+      );
+      if(dointer,
+        forall(invilist,
+          #.visible=false;
+        );
+        forall(drawlisti,
+          #.visible=false;
+        );
+        forall(drawlisto,
+          #.visible=false;
+        );
+        forall(chooselist,
+          #.visible=true;
+        );
+        P.xy=(-8.5,3.5);
+
+        if(same,
+          fillcircle(S,Sc.radius,color->blue(0.7),alpha->1);
+        ,
+          fillcircle(S,Sc.radius,color->(0,0.6,0.9),alpha->1);
+        );
+        if(opp,
+          fillcircle(O,Oc.radius,color->blue(0.7),alpha->1);
+        ,
+          fillcircle(O,Oc.radius,color->(0,0.6,0.9),alpha->1);
+        );
+        tamin=map((0.5,0.5),(0.9,0.5),P,P+1/(1+exp(-|k|*2*pi))*(Q-P));
+        drawimage(tamin*(0,0).homog,tamin*(1,0).homog,"stamp");
+        tamin2=map((0.5,0.5),(0.9,0.5),Q,Q+1/(1+exp(-|k|*2*pi))*(P-Q));
+        drawimage(tamin2*(0,0).homog,tamin2*(1,0).homog,"stamp");
+        fillcircle(Cin,Cinc.radius,color->blue(0.7),alpha->1);
+
+        //choose spirals
+        drawcircle(S-(0.04,0.04),Sc.radius,color->(1,1,1),alpha->0.7,size->5);
+        drawcircle(O-(0.04,0.04),Oc.radius,color->(1,1,1),alpha->0.7,size->5);
+
+        //same k
+        tams1=map((0.5,0.5),(0.9,0.5),S1,S1+1/(1+exp(-|k|*2*pi))*(S2-S1));
+        drawimage(tams1*(0,0).homog,tams1*(1,0).homog,"stamp");
+        tams2=map((0.5,0.5),(0.9,0.5),S2,S2+1/(1+exp(-|k|*2*pi))*(S1-S2));
+        drawimage(tams2*(0,0).homog,tams2*(1,0).homog,"stamp");
+        Sh=fspiral(-k/|k|*pi,S2,S2+1/(1+exp(-|k|*2*pi))*(S1-S2),k,((-1,0),(0,-1)));
+        S3=2*Sh-S2;
+        S4=S3+S2-S1;
+        tams3=map((0.5,0.5),(0.9,0.5),S3,S3+1/(1+exp(-|k|*2*pi))*(S4-S3));
+        drawimage(tams3*(0,0).homog,tams3*(1,0).homog,"stamp");
+        tams4=map((0.5,0.5),(0.9,0.5),S4,S4+1/(1+exp(-|k|*2*pi))*(S3-S4));
+        drawimage(tams4*(0,0).homog,tams4*(1,0).homog,"stamp");
+
+        //opposite k
+        tamo1=map((0.5,0.5),(0.9,0.5),O1,O1+1/(1+exp(-|k|*2*pi))*(O2-O1));
+        drawimage(tamo1*(0,0).homog,tamo1*(1,0).homog,"stampneg");
+        tamo2=map((0.5,0.5),(0.9,0.5),O2,O2+1/(1+exp(-|k|*2*pi))*(O1-O2));
+        drawimage(tamo2*(0,0).homog,tamo2*(1,0).homog,"stampneg");
+        Oh=fspiral(-k/|k|*pi,O2,O2+1/(1+exp(-|k|*2*pi))*(O1-O2),k,((-1,0),(0,-1)));
+        Mnew=2*Oh-(O2+1/(1+exp(-|k|*2*pi))*(O1-O2));
+        ret=calcopp(k,O2.xy,(O2+1/(1+exp(-|k|*2*pi))*(O1-O2)).xy,Oh,Mnew);
+        pol1=ret_1;
+        Mnew2=fspiral(k/|k|*2*pi,pol1,Mnew,-k,((1,0),(0,1)));
+        pol2=Mnew+(Mnew2-pol1);
+        tamo3=map((0.5,0.5),(0.9,0.5),pol1,Mnew);
+        drawimage(tamo3*(0,0).homog,tamo3*(1,0).homog,"stamp");
+        tamo4=map((0.5,0.5),(0.9,0.5),pol2,Mnew2);
+        drawimage(tamo4*(0,0).homog,tamo4*(1,0).homog,"stamp");
+      ,
+        fillcircle(Cin,Cinc.radius,color->(0,0.6,0.9),alpha->1);
+      );
+      drawcircle(Cs-(0.03,0.03),Csc.radius,color->(1,1,1),alpha->0.7,size->4);
+      drawcircle(Cd-(0.03,0.03),Cdc.radius,color->(1,1,1),alpha->0.7,size->4);
+      drawcircle(Cin-(0.03,0.03),Cinc.radius,color->(1,1,1),alpha->0.7,size->4);
+
+
+
+      clearimage("aktcanvas");
+      repeat(length(spirallist),
+        if(#==1,
+          if(kindlist_1,
+            kim=spirallist_#_3;
+          ,
+            kim=spirallist_#_5;
+          );
+          clearimage("stamps");
+          canvas((0,0),(1,0),(0,1),"stamps",
+            plot(fspiral(-kim/|kim|*x,(0.5,0.5),(0.9,0.5),kim,((1,0),(0,1))),start->0,stop->80,color->collist,size->1.5);
+          );
+          clearimage("stampnegs");
+          canvas((0,0),(1,0),(0,1),"stampnegs",
+            plot(fspiral(kim/|kim|*x,(0.5,0.5),(0.9,0.5),-kim,((1,0),(0,1))),start->0,stop->80,color->collist,size->1.5);
+          );
+        );
+        if(#<length(spirallist),
+          if(kindlist_1, //dosingle
+            val=1/(|spirallist_#_3|*3)*|spirallist_#_1-spirallist_#_2|;
+            if(val<0.5,val=0.5);
+            tam=map((0.5,0.5),(0.9,0.5),spirallist_#_1,spirallist_#_2);
+            if(abs(spirallist_#_3-kim)>0,
+              canvas((-5,-3),(20,-3),"aktcanvas",
+                drawimage(tam*(0,0).homog,tam*(1,0).homog,"stampnegs");
+              );
+            ,
+              canvas((-5,-3),(20,-3),"aktcanvas",
+                drawimage(tam*(0,0).homog,tam*(1,0).homog,"stamps");
+              );
+            );
+          , //dodouble/dointer
+            val=1/(|spirallist_#_5|*3)*|spirallist_#_2-spirallist_#_3|;
+            if(val<0.5,val=0.5);
+            if(kindlist_3, //dointer
+              tam1=map((0.5,0.5),(0.9,0.5),spirallist_#_2,spirallist_#_3);
+              tam2=map((0.5,0.5),(0.9,0.5),spirallist_#_4,spirallist_#_2+exp(-|spirallist_#_5|*2*pi)/(exp(-|spirallist_#_5|*2*pi)+exp(-|spirallist_#_5|*pi)+1)*(spirallist_#_4-spirallist_#_1));
+              if(abs(spirallist_#_5-kim)>0,
+                canvas((-5,-3),(20,-3),"aktcanvas",
+                  drawimage(tam1*(0,0).homog,tam1*(1,0).homog,"stampnegs");
+                  drawimage(tam2*(0,0).homog,tam2*(1,0).homog,"stampnegs");
+                );
+              ,
+                canvas((-5,-3),(20,-3),"aktcanvas",
+                  drawimage(tam1*(0,0).homog,tam1*(1,0).homog,"stamps");
+                  drawimage(tam2*(0,0).homog,tam2*(1,0).homog,"stamps");
+                );
+              );
+            ,
+              tam1=map((0.5,0.5),(0.9,0.5),spirallist_#_2,spirallist_#_3);
+              tam2=map((0.5,0.5),(0.9,0.5),spirallist_#_4,spirallist_#_3);
+              if(abs(spirallist_#_5-kim)>0,
+                canvas((-5,-3),(20,-3),"aktcanvas",
+                  drawimage(tam1*(0,0).homog,tam1*(1,0).homog,"stampnegs");
+                  drawimage(tam2*(0,0).homog,tam2*(1,0).homog,"stampnegs");
+                );
+              ,
+                canvas((-5,-3),(20,-3),"aktcanvas",
+                  drawimage(tam1*(0,0).homog,tam1*(1,0).homog,"stamps");
+                  drawimage(tam2*(0,0).homog,tam2*(1,0).homog,"stamps");
+                );
+              );
+            );
+          );
+        ,
+          if(kindlist_1, //dosingle
+            if(|spirallist_#_1-spirallist_#_2|>0.15,
+              val=1/(|spirallist_#_3|*3)*|spirallist_#_1-spirallist_#_2|;
+              if(val<0.5,val=0.5);
+              tam=map((0.5,0.5),(0.9,0.5),spirallist_#_1,spirallist_#_2);
+              if(abs(spirallist_#_3-kim)>0,
+                canvas((-5,-3),(20,-3),"aktcanvas",
+                  drawimage(tam*(0,0).homog,tam*(1,0).homog,"stampnegs");
+                );
+              ,
+                canvas((-5,-3),(20,-3),"aktcanvas",
+                  drawimage(tam*(0,0).homog,tam*(1,0).homog,"stamps");
+                );
+              );
+            );
+          , //dodouble/dointer
+            if(|spirallist_#_2-spirallist_#_3|>0.1,
+              val=1/(|spirallist_#_5|*3)*|spirallist_#_2-spirallist_#_3|;
+              if(val<0.5,val=0.5);
+              if(kindlist_3, //dointer
+                tam1=map((0.5,0.5),(0.9,0.5),spirallist_#_2,spirallist_#_3);
+                tam2=map((0.5,0.5),(0.9,0.5),spirallist_#_4,spirallist_#_2+exp(-|spirallist_#_5|*2*pi)/(exp(-|spirallist_#_5|*2*pi)+exp(-|spirallist_#_5|*pi)+1)*(spirallist_#_4-spirallist_#_1));
+                if(abs(spirallist_#_5-kim)>0,
+                  canvas((-5,-3),(20,-3),"aktcanvas",
+                    drawimage(tam1*(0,0).homog,tam1*(1,0).homog,"stampnegs");
+                    drawimage(tam2*(0,0).homog,tam2*(1,0).homog,"stampnegs");
+                  );
+                ,
+                  canvas((-5,-3),(20,-3),"aktcanvas",
+                    drawimage(tam1*(0,0).homog,tam1*(1,0).homog,"stamps");
+                    drawimage(tam2*(0,0).homog,tam2*(1,0).homog,"stamps");
+                  );
+                );
+              ,
+                tam1=map((0.5,0.5),(0.9,0.5),spirallist_#_2,spirallist_#_3);
+                tam2=map((0.5,0.5),(0.9,0.5),spirallist_#_4,spirallist_#_3);
+                if(abs(spirallist_#_5-kim)>0,
+                  canvas((-5,-3),(20,-3),"aktcanvas",
+                    drawimage(tam1*(0,0).homog,tam1*(1,0).homog,"stampnegs");
+                    drawimage(tam2*(0,0).homog,tam2*(1,0).homog,"stampnegs");
+                  );
+                ,
+                  canvas((-5,-3),(20,-3),"aktcanvas",
+                    drawimage(tam1*(0,0).homog,tam1*(1,0).homog,"stamps");
+                    drawimage(tam2*(0,0).homog,tam2*(1,0).homog,"stamps");
+                  );
+                );
+              );
+            );
+          );
+        );
+      );//end repeat
+
+
+      if(length(kindlist)>1,
+        if(kindlist_1, //if there are children
+          repeat(length(childlist),
+            if(#==1,
+              if(kindlist_2,
+                kim=childlist_#_1_3;
+                clearimage("stampi");
+                canvas((0,0),(1,0),(0,1),"stampi",
+                  plot(fspiral(-kim/|kim|*x,(0.5,0.5),(0.9,0.5),kim,((1,0),(0,1))),start->0,stop->80,color->collist,size->1.5);
+                );
+                clearimage("stampnegi");
+                canvas((0,0),(1,0),(0,1),"stampnegi",
+                  plot(fspiral(kim/|kim|*x,(0.5,0.5),(0.9,0.5),-kim,((1,0),(0,1))),start->0,stop->80,color->collist,size->1.5);
+                );
+              );
+              if(kindlist_3,
+                kom=childlist_#_2_3;
+                clearimage("stampo");
+                canvas((0,0),(1,0),(0,1),"stampo",
+                  plot(fspiral(-kom/|kom|*x,(0.5,0.5),(0.9,0.5),kom,((1,0),(0,1))),start->0,stop->80,color->collist,size->1.5);
+                );
+                clearimage("stampnego");
+                canvas((0,0),(1,0),(0,1),"stampnego",
+                  plot(fspiral(kom/|kom|*x,(0.5,0.5),(0.9,0.5),-kom,((1,0),(0,1))),start->0,stop->80,color->collist,size->1.5);
+                );
+              );
+            ); //end if #==1
+
+             if(kindlist_2,
+              if(|childlist_#_1_1-childlist_#_1_2|>0.2,
+                val=1/(|childlist_#_1_3|*3)*|childlist_#_1_1-childlist_#_1_2|;
+                if(val<0.5,val=0.5);
+                tam=map((0.5,0.5),(0.9,0.5),childlist_#_1_1,childlist_#_1_2);
+                if(abs(childlist_#_1_3-kim)>0,
+                  canvas((-5,-3),(20,-3),"aktcanvas",
+                    drawimage(tam*(0,0).homog,tam*(1,0).homog,"stampnegi");
+                  );
+                ,
+                  canvas((-5,-3),(20,-3),"aktcanvas",
+                    drawimage(tam*(0,0).homog,tam*(1,0).homog,"stampi");
+                  );
+                );
+              );
+            );
+            if(kindlist_3,
+              if(|childlist_#_2_1-childlist_#_2_2|>0.2,
+                val=1/(|childlist_#_2_3|*3)*|childlist_#_2_1-childlist_#_2_2|;
+                if(val<0.25,val=0.25);
+                tam=map((0.5,0.5),(0.9,0.5),childlist_#_2_1,childlist_#_2_2);
+                if(abs(childlist_#_2_3-kom)>0,
+                  canvas((-5,-3),(20,-3),"aktcanvas",
+                    drawimage(tam*(0,0).homog,tam*(1,0).homog,"stampnego");
+                  );
+                ,
+                  canvas((-5,-3),(20,-3),"aktcanvas",
+                    drawimage(tam*(0,0).homog,tam*(1,0).homog,"stampo");
+                  );
+                );
+              );
+            );
+          );//end repeat
+        );//end if kindlist
+      );//end if length kindlist
+
+      drawimage((-5,-3),(20,-3),"aktcanvas");
+    </script>
+
+
+    <script type="text/javascript">
+
+    var cdy = CindyJS({
+      scripts: "cs*",
+      defaultAppearance: { fontFamily: "sans-serif", lineSize: 1, pointSize: 5.0, textsize: 12.0 },
+      angleUnit: "°",
+      geometry: [
+        { name: "X", type: "Free", pos: [ -9.0, 8.5, 1.0 ], color: [ 1.0, 0.0, 0.0 ], size: 3.0 , pinned: true, narrow: true,visible:false},
+        { name: "Y", type: "Free", pos: [ -6.0, 8.5, 1.0 ], color: [ 1.0, 0.0, 0.0 ], size: 3.0 , pinned: true, narrow: true,visible:false},
+        { name: "TextX", type: "Text", color: [ 0.0, 0.0, 0.0 ], args: [ "X" ], text: "-0.5", dock: { to: "X", offset: [ -30,-3 ] }, narrow: true , pinned: true},
+        { name: "TextY", type: "Text", color: [ 0.0, 0.0, 0.0 ], args: [ "Y" ], text: "0.5", dock: { to: "Y", offset: [ 9,-3 ] }, narrow: true , pinned: true},
+        { name: "m", type: "Segment", color: [ 0.0, 0.55, 1.0 ], args: [ "X", "Y" ], labeled: false,size:10 , narrow: true},
+        { name: "Z", type: "PointOnSegment", pos: [ -8.0, 8, 1.0  ], color: [ 0.0, 0.0, 0.8 ], args: [ "m" ], size: 7.0 , labeled: false, narrow: true},
+        { name: "T", type: "Free", pos: [ -9, 9.5, 1.0 ], color: [ 0.0, 0.0, 0.0 ], size: 3.0 , pinned: true, narrow: true,visible:false},
+
+        { name: "Cs", type: "Free", pos: [ -9.0, 7.5, 1.0 ], color: [ 0.0, 0.0, 0.0 ], size: 3.0 , pinned: true, narrow: true,visible:false},
+        { name: "TextCs", type: "Text", color: [ 0.0, 0.0, 0.0 ], args: [ "Cs" ], text: "single spiral", dock: { to: "Cs", offset: [ 20,-4 ] }, narrow: true , pinned: true},
+        { name: "Csc", type: "CircleByRadius", pos: { xx: 0.00134404250469692, yy: 0.00134404250469692, zz: 1.0, xy: 0.0, xz: -0.01075234003757536, yz: 0.07257829525363368 }, color: [ 0,0,0.7 ], radius: 0.2, args: [ "Cs" ], pinned: true, size: 3 , narrow: true},
+
+        { name: "Cd", type: "Free", pos: [ -9.0, 6.7, 1.0 ], color: [ 0.0, 0.0, 0.0 ], size: 3.0 , pinned: true, narrow: true,visible:false},
+        { name: "TextCd", type: "Text", color: [ 0.0, 0.0, 0.0 ], args: [ "Cd" ], text: "double spiral", dock: { to: "Cd", offset: [ 20,-4 ] }, narrow: true , pinned: true},
+        { name: "Cdc", type: "CircleByRadius", pos: { xx: 0.00134404250469692, yy: 0.00134404250469692, zz: 1.0, xy: 0.0, xz: -0.01075234003757536, yz: 0.07257829525363368 }, color: [ 0,0,0.7 ], radius: 0.2, args: [ "Cd" ], pinned: true, size: 3, narrow: true},
+
+        { name: "Cin", type: "Free", pos: [ -9.0, 5.9, 1.0 ], color: [ 0.0, 0.0, 0.0 ], size: 3.0 , pinned: true, narrow: true,visible:false},
+        { name: "TextCin", type: "Text", color: [ 0.0, 0.0, 0.0 ], args: [ "Cin" ], text: "intertwined spiral", dock: { to: "Cin", offset: [ 20,-4 ] }, narrow: true , pinned: true},
+        { name: "Cinc", type: "CircleByRadius", pos: { xx: 0.00134404250469692, yy: 0.00134404250469692, zz: 1.0, xy: 0.0, xz: -0.01075234003757536, yz: 0.07257829525363368 }, color: [ 0,0,0.7 ], radius: 0.2, args: [ "Cin" ], pinned: true, size: 3, narrow: true},
+
+        { name: "P", type: "Free", pos: [ -8.0, 3.5, 1.0 ], color: [ 0.0, 0.0, 0.0 ], size: 2.0 , pinned: true, narrow: false},
+        { name: "Q", type: "Free", pos: [ -6.5, 3.5, 1.0 ], color: [ 0.0, 0.0, 0.0 ], size: 2.0 , pinned: true, narrow: false},
+
+        { name: "Ci", type: "Free", pos: [ -8.8, 0.8, 1.0 ], color: [ 0.0, 0.0, 0.0 ], size: 3.0 , pinned: true, narrow: true,visible:false},
+        { name: "TextCi", type: "Text", color: [ 0.0, 0.0, 0.0 ], args: [ "Ci" ], text: "inner spiral", dock: { to: "Ci", offset: [ -30,-40 ] }, narrow: true , pinned: true},
+        { name: "Cic", type: "CircleByRadius", pos: { xx: 0.00134404250469692, yy: 0.00134404250469692, zz: 1.0, xy: 0.0, xz: -0.01075234003757536, yz: 0.07257829525363368 }, color: [ 0,0,0.7 ], radius: 0.7, args: [ "Ci" ], pinned: true, size: 5 , narrow: true},
+        { name: "Co", type: "Free", pos: [ -6.2, 0.8, 1.0 ], color: [ 0.0, 0.0, 0.0 ], size: 3.0 , pinned: true, narrow: true,visible:false},
+        { name: "TextCo", type: "Text", color: [ 0.0, 0.0, 0.0 ], args: [ "Co" ], text: "outer spiral", dock: { to: "Co", offset: [ -30,-40 ] }, narrow: true , pinned: true},
+        { name: "Coc", type: "CircleByRadius", pos: { xx: 0.00134404250469692, yy: 0.00134404250469692, zz: 1.0, xy: 0.0, xz: -0.01075234003757536, yz: 0.07257829525363368 }, color: [ 0,0,0.7 ], radius: 0.7, args: [ "Co" ], pinned: true, size: 5 , narrow: true},
+        { name: "Vo", type: "Free", pos: [ -9.0, -2.3, 1.0 ], color: [ 1.0, 0.0, 0.0 ], size: 3.0 , pinned: true, narrow: true,visible:false},
+        { name: "Wo", type: "Free", pos: [ -6.0, -2.3, 1.0 ], color: [ 1.0, 0.0, 0.0 ], size: 3.0 , pinned: true, narrow: true,visible:false},
+        { name: "TextVo", type: "Text", color: [ 0.0, 0.0, 0.0 ], args: [ "Vo" ], text: "0", dock: { to: "Vo", offset: [ -20,-3 ] }, narrow: true , pinned: true},
+        { name: "TextWo", type: "Text", color: [ 0.0, 0.0, 0.0 ], args: [ "Wo" ], text: "2 pi", dock: { to: "Wo", offset: [ 9,-3 ] }, narrow: true , pinned: true},
+        { name: "lo", type: "Segment", color: [ 0.0, 0.55, 1.0 ], args: [ "Vo", "Wo" ], labeled: false,size:10 , narrow: true},
+        { name: "Uo", type: "PointOnSegment", pos: [ -8.0, 1, 1.0  ], color: [ 0.0, 0.0, 0.8 ], args: [ "lo" ], size: 7.0 , labeled: false, narrow: true},
+        { name: "TextUo", type: "Text", color: [ 0.0, 0.0, 0.0 ], args: [ "Vo" ], text: "outer spiral position", dock: { to: "Vo", offset: [ -0,-25 ] }, narrow: true , pinned: true},
+        { name: "Vi", type: "Free", pos: [ -9.0, -1, 1.0 ], color: [ 1.0, 0.0, 0.0 ], size: 3.0 , pinned: true, narrow: true,visible:false},
+        { name: "Wi", type: "Free", pos: [ -6.0, -1, 1.0 ], color: [ 1.0, 0.0, 0.0 ], size: 3.0 , pinned: true, narrow: true,visible:false},
+        { name: "TextVi", type: "Text", color: [ 0.0, 0.0, 0.0 ], args: [ "Vi" ], text: "0", dock: { to: "Vi", offset: [ -20,-3 ] }, narrow: true , pinned: true},
+        { name: "TextWi", type: "Text", color: [ 0.0, 0.0, 0.0 ], args: [ "Wi" ], text: "2 pi", dock: { to: "Wi", offset: [ 9,-3 ] }, narrow: true , pinned: true},
+        { name: "li", type: "Segment", color: [ 0.0, 0.55, 1.0 ], args: [ "Vi", "Wi" ], labeled: false,size:10 , narrow: true},
+        { name: "Ui", type: "PointOnSegment", pos: [ -8.9, 0, 1.0  ], color: [ 0.0, 0.0, 0.8 ], args: [ "li" ], size: 7.0 , labeled: false, narrow: true},
+        { name: "TextUi", type: "Text", color: [ 0.0, 0.0, 0.0 ], args: [ "Vi" ], text: "inner spiral position", dock: { to: "Vi", offset: [ -0,-25 ] }, narrow: true , pinned: true},
+
+        { name: "S", type: "Free", pos: [ -9.1, 1, 1.0 ], color: [ 0.0, 0.0, 0.0 ], size: 3.0 , pinned: true, narrow: true,visible:false},
+        { name: "S1", type: "Free", pos: [ -8.1, 1, 1.0 ], color: [ 0.0, 0.0, 0.0 ], size: 3.0 , pinned: true, narrow: true,visible:false},
+        { name: "S2", type: "Free", pos: [ -7.25, 1, 1.0 ], color: [ 0.0, 0.0, 0.0 ], size: 3.0 , pinned: true, narrow: true,visible:false},
+        { name: "Sc", type: "CircleByRadius", pos: { xx: 0.00134404250469692, yy: 0.00134404250469692, zz: 1.0, xy: 0.0, xz: -0.01075234003757536, yz: 0.07257829525363368 }, color: [ 0,0,0.7 ], radius: 0.4, args: [ "S" ], pinned: true, size: 3.3, narrow: true},
+
+        { name: "O", type: "Free", pos: [ -9.1, -1, 1.0 ], color: [ 0.0, 0.0, 0.0 ], size: 3.0 , pinned: true, narrow: true,visible:false},
+        { name: "O1", type: "Free", pos: [ -8.1, -1, 1.0 ], color: [ 0.0, 0.0, 0.0 ], size: 3.0 , pinned: true, narrow: true,visible:false},
+        { name: "O2", type: "Free", pos: [ -7.25, -1, 1.0 ], color: [ 0.0, 0.0, 0.0 ], size: 3.0 , pinned: true, narrow: true,visible:false},
+        { name: "Oc", type: "CircleByRadius", pos: { xx: 0.00134404250469692, yy: 0.00134404250469692, zz: 1.0, xy: 0.0, xz: -0.01075234003757536, yz: 0.07257829525363368 }, color: [ 0,0,0.7 ], radius: 0.4, args: [ "O" ], pinned: true, size: 3.3, narrow: true},
+      ],
+      ports: [{
+        id: "CSCanvas",
+        transform: [{visibleRect: [-10, -10, 20, 10]}],
+      }],
+      csconsole: false,
+      use: ["CindyGL"],
+      autoplay: false,
+    });
+
+
+    function hexToRgb(hex) {
+      var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : null;
+    };
+
+    </script>
+  </head>
+  <body>
+    <div id="container">
+
+      <div id="controls">
+        &nbsp;&nbsp;<u>Color:</u>&nbsp;&nbsp;
+        <input type="color" value="#000000" id="color" >
+        &nbsp;
+
+        <button id="reset" class="box" onclick="cdy.evokeCS('reset()');" >
+          Reset
+        </button>
+
+        &nbsp;&nbsp;<u>Width:</u> &nbsp; 0.15 &nbsp;
+        <input type="range" min="11" max="100" value="55" class="slider" id="wRange">
+        &nbsp;&nbsp;1 &nbsp;
+
+        <button id="undo" class="box" onclick="cdy.evokeCS('undo()');" >
+          Undo
+        </button>
+
+        &nbsp;&nbsp;<u>Pressure:</u> &nbsp;&nbsp;0%&nbsp;
+        <input type="range" min="0" max="100" value="50" class="slider" id="pRange">
+        &nbsp;&nbsp;100%
+
+        &nbsp;&nbsp;<u>Altitude:</u> &nbsp;&nbsp;0%&nbsp;
+        <input type="range" min="0" max="100" value="50" class="slider" id="aRange">
+        &nbsp;&nbsp;100%
+
+      </div>
+    </div>
+
+    <div id="CSCanvas"></div>
+      <script type="text/javascript" src="TouchEvent.js"> </script>
+    </div>
+
+    <script type="text/javascript">
+      // Register a plugin called "TouchEvent", using plugin API version 1
+      CindyJS.registerPlugin(1, "TouchEvent", function(api) {
+        // Define a CindyScript function called "penforce"
+        // giving back the force detected during the drawing event
+        api.defineFunction("penforce", 0, function(args, modifs) {
+          return {
+            ctype: "number",
+            value: {
+              'real': force,
+              'imag' : 0}
+          };
+        });
+
+        // Define a CindyScript function called "penaltitude"
+        // giving back the altitude angle detected during the drawing event
+        api.defineFunction("penaltitude", 0, function(args, modifs) {
+          return {
+            ctype: "number",
+            value: {
+              'real': altitudeAngle,
+              'imag' : 0}
+          };
+        });
+      });
+
+    </script>
+  </body>
+</html>

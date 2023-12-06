@@ -1,0 +1,3846 @@
+<!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="UTF-8">
+    <title>DesignStrokes</title>
+    <style type="text/css">
+      body {
+        margin: 0px;
+        padding: 0px;
+      }
+
+      #CSCanvas {
+        width: 100%; height: 70vh;
+        display: flex; flex-grow: 0;
+        background-color: rgba(255,255,255,1);  }
+
+      #container {
+        width: 100%; height: 50%;
+        display: flex; flex-direction: column;  }
+
+      #controls {
+        flex-grow: 1; display: flex; flex-direction: row;
+        width: 100%; height: 80px;
+        align-items: stretch; text-align: center; align-items: center;
+        background-color: lightgray;   }
+
+      .box {
+        background-color: dodgerblue; border: none;margin: 0px;
+        flex-grow: 0; color: blue; font-size: 15px;
+        height: 60px; border-radius: 40%; cursor: pointer;  }
+
+      .box:hover {
+        background-color: darkblue; cursor: pointer; }
+
+
+      .slider {
+        display: flex; flex-direction: row; -webkit-appearance: none;
+        width: 100px; height: 10px; border-radius: 5px;
+        outline: none; opacity: 0.8;
+        -webkit-transition: .2s; transition: opacity .2s;
+        background: dodgerblue;  }
+
+
+      .slider::-webkit-slider-thumb {
+        -webkit-appearance: none; appearance: none;
+        width: 18px; height: 18px;
+        border-radius: 50%; background: darkblue; cursor: pointer; }
+
+      .slider::-moz-range-thumb {
+        width: 20px; height: 20px;
+        border-radius: 50%; background: darkblue; cursor: pointer;   }
+
+
+    </style>
+
+    <script type="text/javascript" src="https://cindyjs.org/dist/latest/Cindy.js"></script>
+    <script type="text/javascript" src="https://cindyjs.org/dist/v0.8/CindyGL.js"></script>
+
+
+    <script id="csinit" type="text/x-cindyscript">
+      use("CindyGL");
+      use("TouchEvent");
+      ptforcelist=[];
+      allptlist=[];
+
+      equicount=0;
+      equicount2=0;
+      counttile=0;
+      wholetile=1;
+
+      createimage("listcanvas", 1024,512);
+
+      lastmat=[];
+      collist=[];
+      changecanvas=0;
+      lastpenforce=0;
+      startnewlist=1;
+
+      eps=2;
+
+      mouseVec=[100,100];
+      finger=0;
+      id=0;
+      drag=false;
+      once=false;
+      param=0;
+
+      widval=-10;
+      aval=-10;
+      pval=-10;
+      rgbvec=(0,0,0);
+      countorna=1;
+      doorna=true;
+      xold=0;
+
+      amountold=100;
+      dochangeamount=false;
+
+      ornaonoff():=(
+        countorna=countorna+1;
+        javascript("setColor('orna')");
+      );
+      javascript("setColor('orna')");
+
+      createimage("storecanvas", 1024,512);
+      createimage("aktcanvas", 1024,512);
+      createimage("conftestcanvas", 1024,512);
+      createimage("countcanvas", 1024,512);
+      createimage("ptcanvas", 1024, 512);
+      createimage("mpcanvas", 1024, 512);
+      createimage("equicanvas", 1024, 512);
+      createimage("mpimcanvas", 1024, 512);
+      createimage("radcanvas", 1024, 512);
+      createimage("tilecanvas", 1024,512);
+
+      createimage("aktcanvas2", 1024,512);
+      createimage("conftestcanvas2", 1024,512);
+      createimage("countcanvas2", 1024,512);
+      createimage("ptcanvas2", 1024, 512);
+      createimage("mpcanvas2", 1024, 512);
+      createimage("equicanvas2", 1024, 512);
+      createimage("mpimcanvas2", 1024, 512);
+      createimage("radcanvas2", 1024, 512);
+      createimage("tilecanvas2", 1024,512);
+
+      createimage("overlapcanvas", 1024,512);
+      createimage("overlapcanvas2", 1024,512);
+
+
+
+      reset() := (
+        ptforcelist=[];
+        allptlist=[];
+
+        equicount=0;
+        equicount2=0;
+        counttile=0;
+        wholetile=1;
+
+        lastmat=[];
+        changecanvas=0;
+        collist=[];
+        lastpenforce=0;
+        startnewlist=1;
+        finger=0;
+        id=0;
+        drag=false;
+        param=0;
+        xold=0;
+
+        amountold=100;
+        dochangeamount=false;
+
+        colorplot((0,0),(1024,0),"storecanvas",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"aktcanvas",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"conftestcanvas",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"countcanvas",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"ptcanvas",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"mpcanvas",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"equicanvas",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"mpimcanvas",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"radcanvas",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"tilecanvas",(0,0,0,-1));
+
+        colorplot((0,0),(1024,0),"aktcanvas2",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"conftestcanvas2",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"countcanvas2",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"ptcanvas2",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"mpcanvas2",(0,0,0,0));
+        colorplot((0,0),(1024,0),"equicanvas2",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"mpimcanvas2",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"radcanvas2",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"tilecanvas2",(0,0,0,-1));
+
+        colorplot((0,0),(1024,0),"overlapcanvas",(0,0,0,0));
+        colorplot((0,0),(1024,0),"overlapcanvas2",(0,0,0,0));
+
+        colorplot((0,0),(1024,0),"listcanvas",(0,0,0,0));
+      );
+
+
+      undo():=(
+        lastpenforce=0;
+        startnewlist=1;
+        drag=false;
+        xold=0;
+
+        amountold=100;
+        dochangeamount=false;
+        changecanvas=0;
+
+        colorplot((0,0),(1024,0),"aktcanvas",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"conftestcanvas",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"countcanvas",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"ptcanvas",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"mpcanvas",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"equicanvas",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"mpimcanvas",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"radcanvas",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"tilecanvas",(0,0,0,-1));
+
+        colorplot((0,0),(1024,0),"aktcanvas2",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"conftestcanvas2",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"countcanvas2",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"ptcanvas2",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"mpcanvas2",(0,0,0,0));
+        colorplot((0,0),(1024,0),"equicanvas2",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"mpimcanvas2",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"radcanvas2",(0,0,0,-1));
+        colorplot((0,0),(1024,0),"tilecanvas2",(0,0,0,-1));
+
+        colorplot((0,0),(1024,0),"overlapcanvas",(0,0,0,0));
+        colorplot((0,0),(1024,0),"overlapcanvas2",(0,0,0,0));
+
+        colorplot((0,0),(1024,0),"listcanvas",(0,0,0,0));
+
+      );
+
+      loadvar=0;
+
+      imratio=1;
+      imratio1=1;
+      imratio3=1;
+      imratiotile=1;
+      scvel=64;
+
+      scvelnew=1024;
+      base=256;
+
+      clampvel(x):=max(min(x,1),0);
+      //splitData and restoreData functions
+      compvel(u,scvel,base):=(
+      	ux=clampvel(u_1/scvel);
+      	uy=clampvel(u_2/scvel);
+      	uxh=round(ux*base)/base;
+      	uyh=round(uy*base)/base;
+      	uxl=round((ux-uxh)*base*base)/base;
+      	uyl=round((uy-uyh)*base*base)/base;
+      	(uxh,uyh,uxl,uyl);
+      );
+
+      expvel(u,scvel,base):=(
+      	ur=((u_1)+(u_3)/base,(u_2)+(u_4)/base,0,0);
+        ur*scvel;
+      );
+
+      compmp(u,scvel,base):=(
+      	ux=clampvel(u_1/scvel);
+      	uxh=round(ux*base)/base;
+      	uxl=round((ux-uxh)*base*base)/base;
+      	(uxh,uxl,u_3,u_4);
+      );
+      expmp(u,scvel,base):=(
+      	ur1=((u_1)+(u_2)/base)*scvel;
+        (ur1,16,u_3,u_4)
+      );
+
+      compvelnew(u,scvelnew,base):=(
+      	ux=clampvel(u_1/scvelnew);
+      	uy=clampvel(u_2/scvelnew);
+      	uxh=round(ux*base)/base;
+      	uyh=round(uy*base)/base;
+      	uxl=round((ux-uxh)*base*base)/base;
+      	uyl=round((uy-uyh)*base*base)/base;
+      	(uxh,uyh,uxl,uyl);
+      );
+
+      expvelnew(u,scvelnew,base):=(
+      	ur=((u_1)+(u_3)/base,(u_2)+(u_4)/base,0,0);
+        ur*scvelnew;
+      );
+
+      compmpequi(u,base):=(
+        ux=clampvel(u_1/base);
+      	uy=clampvel(u_2/base);
+      	uxh=round(ux*base)/base;
+      	uyh=round(uy*base)/base;
+      	uxl=round((ux-uxh)*base*base)/base;
+      	uyl=round((uy-uyh)*base*base)/base;
+      	(uxh,uyh,uxl,uyl);
+      );
+      expmpequi(u,base):=(
+        ur=((u_1)+(u_3)/base,(u_2)+(u_4)/base,0,0);
+        ur*base;
+      );
+
+      lerp(x,y,t):=t*y+(1-t)*x;
+
+      //cubic splines
+      sp(t,v):=(1, t, t^2, t^3)*1/6*((1,4,1,0),(-3,0,3,0),(3,-6,3,0),(-1,3,-3,1))*v;
+      sr(t,v):=(1, t, t^2, t^3)*1/6*((1,4,1,0),(-3,0,3,0),(3,-6,3,0),(-1,3,-3,1))*v;
+      spd(t,v):=(0, 1, 2*t, 3*t^2)*1/6*((1,4,1,0),(-3,0,3,0),(3,-6,3,0),(-1,3,-3,1))*v;
+      srd(t,v):=(0, 1, 2*t, 3*t^2)*1/6*((1,4,1,0),(-3,0,3,0),(3,-6,3,0),(-1,3,-3,1))*v;
+      spd2(t,v):=(0, 0, 2, 6*t)*1/6*((1,4,1,0),(-3,0,3,0),(3,-6,3,0),(-1,3,-3,1))*v;
+      srd2(t,v):=(0, 0, 2, 6*t)*1/6*((1,4,1,0),(-3,0,3,0),(3,-6,3,0),(-1,3,-3,1))*v;
+      wp(t,vp,vr):=sp(t,vp)-sr(t,vr)*srd(t,vr)/|spd(t,vp)|^2*spd(t,vp)+sr(t,vr)/|spd(t,vp)|^2*Re(sqrt(|spd(t,vp)|^2-srd(t,vr)^2))*((0,-1),(1,0))*spd(t,vp);
+      wm(t,vp,vr):=sp(t,vp)-sr(t,vr)*srd(t,vr)/|spd(t,vp)|^2*spd(t,vp)-sr(t,vr)/|spd(t,vp)|^2*Re(sqrt(|spd(t,vp)|^2-srd(t,vr)^2))*((0,-1),(1,0))*spd(t,vp);
+
+      wp1(t,vp1,vp2,vr):=sp(t,vp1)-sr(t,vr)*srd(t,vr)/|(spd(t,vp1),spd(t,vp2))|^2*spd(t,vp1)+sr(t,vr)/|(spd(t,vp1),spd(t,vp2))|^2*Re(sqrt(|(spd(t,vp1),spd(t,vp2))|^2-srd(t,vr)^2))*(-1)*spd(t,vp2);
+      wm1(t,vp1,vp2,vr):=sp(t,vp1)-sr(t,vr)*srd(t,vr)/|(spd(t,vp1),spd(t,vp2))|^2*spd(t,vp1)-sr(t,vr)/|(spd(t,vp1),spd(t,vp2))|^2*Re(sqrt(|(spd(t,vp1),spd(t,vp2))|^2-srd(t,vr)^2))*(-1)*spd(t,vp2);
+
+      wp2(t,vp1,vp2,vr):=sp(t,vp2)-sr(t,vr)*srd(t,vr)/|(spd(t,vp1),spd(t,vp2))|^2*spd(t,vp2)+sr(t,vr)/|(spd(t,vp1),spd(t,vp2))|^2*Re(sqrt(|(spd(t,vp1),spd(t,vp2))|^2-srd(t,vr)^2))*spd(t,vp1);
+      wm2(t,vp1,vp2,vr):=sp(t,vp2)-sr(t,vr)*srd(t,vr)/|(spd(t,vp1),spd(t,vp2))|^2*spd(t,vp2)-sr(t,vr)/|(spd(t,vp1),spd(t,vp2))|^2*Re(sqrt(|(spd(t,vp1),spd(t,vp2))|^2-srd(t,vr)^2))*spd(t,vp1);
+
+
+      testsecdiff(x,y,t,vp,vr):=-2*((x-sp(t,vp)_1)*spd2(t,vp)_1-(spd(t,vp)_1)^2+(y-sp(t,vp)_2)*spd2(t,vp)_2-(spd(t,vp)_2)^2+sr(t,vr)*srd2(t,vr)+(srd(t,vr)^2));
+
+      wpd(t,vp,vr):=spd(t,vp)*(1-srd(t,vr)^2/|spd(t,vp)|^2-(sr(t,vr)*srd2(t,vr))/|spd(t,vp)|^2+(2*sr(t,vr)*srd(t,vr)*(spd(t,vp)_1*spd2(t,vp)_1+spd(t,vp)_2*spd2(t,vp)_2))/|spd(t,vp)|^4)
+              -spd2(t,vp)*sr(t,vr)*srd(t,vr)/|spd(t,vp)|^2+((0,-1),(1,0))*spd2(t,vp)*sr(t,vr)/|spd(t,vp)|^2*Re(sqrt(|spd(t,vp)|^2-srd(t,vr)^2))
+              +((0,-1),(1,0))*spd(t,vp)*(srd(t,vr)/|spd(t,vp)|^2*Re(sqrt(|spd(t,vp)|^2-srd(t,vr)^2))-2*sr(t,vr)*(spd(t,vp)_1*spd2(t,vp)_1+spd(t,vp)_2*spd2(t,vp)_2)/|spd(t,vp)|^4*Re(sqrt(|spd(t,vp)|^2-srd(t,vr)^2))
+                +sr(t,vr)/|spd(t,vp)|^2*(spd(t,vp)_1*spd2(t,vp)_1+spd(t,vp)_2*spd2(t,vp)_2-srd(t,vr)*srd2(t,vr))/Re(sqrt(|spd(t,vp)|^2-srd(t,vr)^2)));
+
+      wmd(t,vp,vr):=spd(t,vp)*(1-srd(t,vr)^2/|spd(t,vp)|^2-(sr(t,vr)*srd2(t,vr))/|spd(t,vp)|^2+(2*sr(t,vr)*srd(t,vr)*(spd(t,vp)_1*spd2(t,vp)_1+spd(t,vp)_2*spd2(t,vp)_2))/|spd(t,vp)|^4)
+              -spd2(t,vp)*sr(t,vr)*srd(t,vr)/|spd(t,vp)|^2-((0,-1),(1,0))*spd2(t,vp)*sr(t,vr)/|spd(t,vp)|^2*Re(sqrt(|spd(t,vp)|^2-srd(t,vr)^2))
+              -((0,-1),(1,0))*spd(t,vp)*(srd(t,vr)/|spd(t,vp)|^2*Re(sqrt(|spd(t,vp)|^2-srd(t,vr)^2))-2*sr(t,vr)*(spd(t,vp)_1*spd2(t,vp)_1+spd(t,vp)_2*spd2(t,vp)_2)/|spd(t,vp)|^4*Re(sqrt(|spd(t,vp)|^2-srd(t,vr)^2))
+                +sr(t,vr)/|spd(t,vp)|^2*(spd(t,vp)_1*spd2(t,vp)_1+spd(t,vp)_2*spd2(t,vp)_2-srd(t,vr)*srd2(t,vr))/Re(sqrt(|spd(t,vp)|^2-srd(t,vr)^2)));
+
+
+      drawtocanvas(newdist, newallpt, newallrad, newvec, xold, equicount, collist, takt, vp, vr, allptlist, changecanvas, equicount2, lastmat,counttile):=(
+
+        if(doorna,
+          newvnorm=1/|newvec|*newvec;
+          vec3=newallrad*newvnorm;
+          vec4=(vec3_2,-vec3_1);
+
+          distpix=2*newallrad;
+          mal=newdist*32/(distpix);
+
+          xbefore=xold;
+          xold=xold+mal;
+
+          counttile=(xold)/(imratiotile*32)+1/imratiotile;
+
+          if(or(flag==7,flag==5),
+            if(counttile>wholetile,
+              wholetile=wholetile+1;
+              colorplot((0,0),(1024,0),"listcanvas",
+                p=#.xy;
+                col=imagergba((0,0),(1024,0),"listcanvas",#,interpolate->false);
+                if(p_1<=floor(counttile)+1+0.5,if(p_1>(floor(counttile)+1-0.5),
+                  if(newallrad>30,
+                    col=(4,0,0,1);
+                  ,if(newallrad>20,
+                    col=(3,0,0,1);
+                    ,if(newallrad>15,
+                      col=(2,0,0,1);
+                      ,
+                      col=(1,0,0,1);
+                    );
+                   );
+                  );
+                ));
+                col
+              );//end colorplot
+            ); //end if new wholetile
+          );//flag==7, //flag==5
+
+          if(flag==6,
+            if(counttile>wholetile,
+              wholetile=wholetile+1;
+            );
+          );//flag==6
+
+          if(flag==4,
+            if(counttile>wholetile,
+              wholetile=wholetile+1;
+            );
+          );//flag==4
+
+          if(flag==3,
+            if(counttile>wholetile,
+              wholetile=wholetile+1;
+              colorplot((0,0),(1024,0),"listcanvas",
+                p=#.xy;
+                col=imagergba((0,0),(1024,0),"listcanvas",#,interpolate->false);
+                if(p_1<=floor(counttile)+1+0.5,if(p_1>(floor(counttile)+1-0.5),
+                  if(newallrad>25,
+                    lastcol=imagergba((0,0),(1024,0),"listcanvas",(floor(counttile),1),interpolate->false);
+                    if(lastcol_1==3,
+                      col=(4,0,0,1);
+                      ,
+                      randnum=random();
+                      if(randnum<0.4,
+                        col=(1,5,0,1);
+                      ,if(randnum<0.55,
+                        col=(1,6,0,1);
+                        , if(randnum<0.7,
+                          col=(1,8,0,1);
+                          ,if(randnum<0.75,
+                            col=(1,9,0,1);
+                            ,if(randnum<0.8,
+                              col=(1,11,0,1);
+                              ,
+                                col=(1,1,0,1);
+                              );
+                            );
+                          );
+                        );
+
+                      );
+
+                    );
+                  ,
+                    lastcol=imagergba((0,0),(1024,0),"listcanvas",(floor(counttile),1),interpolate->false);
+                    if(lastcol_1==1,
+                      col=(2,0,0,1);
+                      ,
+                      randnum=random();
+                      if(randnum<0.5,
+                        col=(3,7,0,1);
+                      ,if(randnum<0.6,
+                        col=(3,10,0,1);
+                        ,
+                          col=(3,3,0,1);
+                        );
+                      );
+                    );
+                  );
+                ));
+                col
+              );//end colorplot
+            );
+          );//flag==3
+
+          if(flag==1,
+            if(counttile>wholetile,
+              wholetile=wholetile+1;
+              colorplot((0,0),(1024,0),"listcanvas",
+                p=#.xy;
+                col=imagergba((0,0),(1024,0),"listcanvas",#,interpolate->false);
+                if(p_1<=floor(counttile)+1+0.5,if(p_1>(floor(counttile)+1-0.5),
+                  if(newallrad>30,
+                    col=(4,0,0,1);
+                  ,if(newallrad>20,
+                    col=(3,0,0,1);
+                    ,if(newallrad>15,
+                      col=(2,0,0,1);
+                      ,
+                      col=(1,0,0,1);
+                    );
+                   );
+                  );
+                ));
+                col
+              );//end colorplot
+            ); //end if new wholetile
+          );//flag==1
+
+
+          x1=mod(xold,imratio*64);
+          x2=mod(32+xold,imratio*64);
+
+          if(x1>x2,
+            x1=mod(-imratio*32+xold,imratio*64);
+            x2=mod(-imratio*32+32+xold,imratio*64);
+          );
+
+          mat=map(newallpt-vec3+vec4,newallpt+vec3+vec4,(x1,0),(x2,0));
+          matact=map(newallpt-vec3+vec4,newallpt+vec3+vec4,(xold,0),(xold+32,0));
+
+
+          ptnew=newallpt;
+          fval=newallrad;
+
+          if(changecanvas==0,
+          equicount=equicount+1;
+
+          colorplot((0,0),(1024,0),"ptcanvas",
+            col=imagergba((0,0),(1024,0),"ptcanvas",#);
+            ins=imagergba((0,0),(1024,0),"mpcanvas",#);
+            pointc=(ptnew_1-#.x,ptnew_2-#.y);
+            impt=(matact*(#.x,#.y,1)).xy;
+            if(|pointc|<=fval+0.5,
+              if(ins_4<1 ,
+                col=compvel((mod(impt_1,imratiotile*32),min(max(0,impt_2),32),0,1),scvel,base);
+              );
+            );
+            col
+          ); //end colorplot
+
+          colorplot((0,0),(1024,0),"mpimcanvas", interpolate->false,
+            colnew=imagergba((0,0),(1024,0),"mpimcanvas",#);
+            col=imagergba((0,0),(1024,0),"mpcanvas",#);
+            pointc=(ptnew_1-#.x,ptnew_2-#.y);
+            if(|pointc|<=fval+0.5,
+              if(col_4<1,
+                colnew=compvelnew((ptnew_1,ptnew_2,0,1),scvelnew,base);  );
+            );
+            colnew
+          );//end colorplot
+
+          colorplot((0,0),(1024,0),"radcanvas", interpolate->false,
+            coln=imagergba((0,0),(1024,0),"radcanvas",#);
+            col=imagergba((0,0),(1024,0),"mpcanvas",#);
+            pointc=(ptnew_1-#.x,ptnew_2-#.y);
+            if(|pointc|<=fval+0.5,
+              if(col_4<1,
+                coln=compmpequi((floor(fval),(fval-floor(fval))*100,0,1),base); ); //end if col_4
+            );
+            coln
+          );//end colorplot
+
+          colorplot((0,0),(1024,0),"tilecanvas", interpolate->false,
+            coln=imagergba((0,0),(1024,0),"tilecanvas",#);
+            col=imagergba((0,0),(1024,0),"mpcanvas",#);
+            pointc=(ptnew_1-#.x,ptnew_2-#.y);
+            imptact=(matact*(#.x,#.y,1)).xy;
+            if(|pointc|<=fval+0.5,
+              if(col_4<1,
+                anzti=1+(imptact_1)/(imratiotile*32);
+                coln=(floor(anzti),0,0,1);
+              );
+            );
+            coln
+          );//end colorplot
+
+          eone=mod(equicount,256);
+          etwo=floor(equicount/256);
+          colorplot((0,0),(1024,0),"equicanvas",
+            col=imagergba((0,0),(1024,0),"equicanvas",#);
+            ins=imagergba((0,0),(1024,0),"mpcanvas",#);
+            pointc=(ptnew_1-#.x,ptnew_2-#.y);
+            if(|pointc|<=fval+0.5,
+              if(ins_4<1, col=compmpequi((eone,etwo,0,1),base););
+            );
+            col
+          );//end colorplots
+
+          pt=(matact*(ptnew_1,ptnew_2,1)).xy;
+          colorplot((0,0),(1024,0),"mpcanvas",
+            col=imagergba((0,0),(1024,0),"mpcanvas",#);
+            pointc=(ptnew_1-#.x,ptnew_2-#.y);
+            pt=(matact*(ptnew_1,ptnew_2,1)).xy;
+            if(|pointc|<=fval+0.5,
+              if(col_4<1, col=compmp((mod(pt_1,imratiotile*32),16,floor(pt_1/(imratiotile*32)),1),scvel,base);  );
+            );
+            col
+          );//end colorplots
+
+
+        , //changecanvas==1
+
+          equicount2=equicount2+1;
+
+          if(equicount2==1,
+            colorplot((0,0),(1024,0),"overlapcanvas",
+              col=imagergba((0,0),(1024,0),"overlapcanvas",#);
+              ins=imagergba((0,0),(1024,0),"mpcanvas",#);
+              pointc=(ptnew_1-#.x,ptnew_2-#.y);
+              if(|pointc|<=fval+0.5,
+                if(ins_4<1 ,
+                  col=(1,0,1,1);
+                );
+              );
+              col
+            ); //end colorplot
+
+            ptold=allptlist_(-2)_1;
+            radold=allptlist_(-2)_2;
+
+            colorplot((0,0),(1024,0),"overlapcanvas2",
+              col=imagergba((0,0),(1024,0),"overlapcanvas2",#);
+              ins=imagergba((0,0),(1024,0),"mpcanvas2",#);
+              pointc=(ptold_1-#.x,ptold_2-#.y);
+              impt=(lastmat*(#.x,#.y,1)).xy;
+              if(|pointc|<=radold+0.5,
+                if(ins_4<1 ,
+                  col=(1,0,0,1);
+                );
+              );
+              col
+            ); //end colorplot
+          ); //end if equicount2==1
+
+            colorplot((0,0),(1024,0),"ptcanvas2",
+              col=imagergba((0,0),(1024,0),"ptcanvas2",#);
+              ins=imagergba((0,0),(1024,0),"mpcanvas2",#);
+              ins2=imagergba((0,0),(1024,0),"overlapcanvas2",#);
+              pointc=(ptnew_1-#.x,ptnew_2-#.y);
+              impt=(matact*(#.x,#.y,1)).xy;
+              if(|pointc|<=fval+0.5,
+                if((ins_4+ins2_4)<1 ,
+                  col=compvel((mod(impt_1,imratiotile*32),min(max(0,impt_2),32),0,1),scvel,base);
+                );
+              );
+              col
+            ); //end colorplot
+
+            colorplot((0,0),(1024,0),"mpimcanvas2", interpolate->false,
+              colnew=imagergba((0,0),(1024,0),"mpimcanvas2",#);
+              col=imagergba((0,0),(1024,0),"mpcanvas2",#);
+              ins2=imagergba((0,0),(1024,0),"overlapcanvas2",#);
+              pointc=(ptnew_1-#.x,ptnew_2-#.y);
+              if(|pointc|<=fval+0.5,
+                if((col_4+ins2_4)<1,
+                  colnew=compvelnew((ptnew_1,ptnew_2,0,1),scvelnew,base);
+                );
+              );
+              colnew
+            );//end colorplot
+
+            colorplot((0,0),(1024,0),"radcanvas2", interpolate->false,
+              coln=imagergba((0,0),(1024,0),"radcanvas2",#);
+              col=imagergba((0,0),(1024,0),"mpcanvas2",#);
+              ins2=imagergba((0,0),(1024,0),"overlapcanvas2",#);
+              pointc=(ptnew_1-#.x,ptnew_2-#.y);
+              if(|pointc|<=fval+0.5,
+                if((col_4+ins2_4)<1,
+                  coln=compmpequi((floor(fval),(fval-floor(fval))*100,0,1),base);
+                );
+              );
+              coln
+            );//end colorplot
+
+            colorplot((0,0),(1024,0),"tilecanvas2", interpolate->false,
+              coln=imagergba((0,0),(1024,0),"tilecanvas2",#);
+              col=imagergba((0,0),(1024,0),"mpcanvas2",#);
+              ins2=imagergba((0,0),(1024,0),"overlapcanvas2",#);
+              pointc=(ptnew_1-#.x,ptnew_2-#.y);
+              imptact=(matact*(#.x,#.y,1)).xy;
+              if(|pointc|<=fval+0.5,
+                if((col_4+ins2_4)<1,
+                  anzti=1+(imptact_1)/(imratiotile*32);
+                  coln=(floor(anzti),0,0,1);
+                );
+              );
+              coln
+            );//end colorplot
+
+            eone=mod(equicount2,256);
+            etwo=floor(equicount2/256);
+            colorplot((0,0),(1024,0),"equicanvas2",
+              col=imagergba((0,0),(1024,0),"equicanvas2",#);
+              ins=imagergba((0,0),(1024,0),"mpcanvas2",#);
+              ins2=imagergba((0,0),(1024,0),"overlapcanvas2",#);
+              pointc=(ptnew_1-#.x,ptnew_2-#.y);
+              if(|pointc|<=fval+0.5,
+                if((ins_4+ins2_4)<1,
+                  col=compmpequi((eone,etwo,0,1),base);
+                );
+              );
+              col
+            );//end colorplot
+
+            pt=(matact*(ptnew_1,ptnew_2,1)).xy;
+            colorplot((0,0),(1024,0),"mpcanvas2",
+              col=imagergba((0,0),(1024,0),"mpcanvas2",#);
+              ins2=imagergba((0,0),(1024,0),"overlapcanvas2",#);
+              pointc=(ptnew_1-#.x,ptnew_2-#.y);
+              pt=(matact*(ptnew_1,ptnew_2,1)).xy;
+              if(|pointc|<=fval+0.5,
+                if((col_4+ins2_4)<1,
+                  col=compmp((mod(pt_1,imratiotile*32),16,floor(pt_1/(imratiotile*32)),1),scvel,base);
+                );
+              );
+              col
+            );//end colorplot
+
+        );//end if changecanvas
+
+        lastmat=mat;
+
+        ,
+          //no orna
+          ptnew=newallpt;
+          fval=newallrad;
+
+          colorplot((0,0),(1024,0),"aktcanvas",
+            col=imagergba((0,0),(1024,0),"aktcanvas", # , interpolate->true);
+            pointc=(ptnew_1-#.x,ptnew_2-#.y);
+            if(|pointc|<=fval+0.5,
+              if(col_4<=1,col=(collist_1,collist_2,collist_3,1))
+            );
+            col
+          ); //end colorplot
+
+
+          colorplot((0,0),(1024,0),"aktcanvas",
+            col=imagergba((0,0),(1024,0),"aktcanvas",#,interpolate->true);
+            if(col_4<1,
+              count=0;
+              lista=[[1,0],[0,1],[-1,0],[0,-1]];
+              repeat(4,i,
+                coln=imagergba((0,0),(1024,0),"aktcanvas",#+lista_i,interpolate->true);
+                if(coln_4>=1,count=count+1);
+              );//end repeat
+              if(count>=2,
+                col=(collist_1,collist_2,collist_3,0.9);
+              );//end if count
+            );//end if col
+            col
+          );//end colorplot
+
+          colorplot((0,0),(1024,0),"aktcanvas",
+            col=imagergba((0,0),(1024,0),"aktcanvas",#,interpolate->true);
+            if(col_4<0.9,
+              count=0;
+              lista=[[1,0],[0,1],[-1,0],[0,-1]];
+              repeat(4,i,
+                coln=imagergba((0,0),(1024,0),"aktcanvas",#+lista_i,interpolate->true);
+                if(coln_4>=0.9,count=count+1);
+              );//end repeat
+              if(count>=2,
+                col=(collist_1,collist_2,collist_3,0.8);
+              );//end if count
+            );//end if col
+            col
+          );//end colorplot
+
+        );//end doorna
+
+        [xold,equicount,equicount2, lastmat,counttile]
+
+      );//end drawtocanvas
+
+
+    fun(eps, penforceVal , alti, mousePos, lastpenforce, startnewlist, ptforcelist,allptlist,equicount, collist, param, xold, changecanvas, equicount2, lastmat, counttile ):=(
+
+      javascript("var wslider = document.getElementById('wRange'); cdy.evokeCS('widval='+wslider.value/100+';'); wslider.oninput = function() {cdy.evokeCS('widval='+ this.value/100+';')};");
+      javascript("var aslider = document.getElementById('aRange'); cdy.evokeCS('aval='+aslider.value/100+';'); aslider.oninput = function() {cdy.evokeCS('aval='+ this.value/100+';')};");
+      javascript("var pslider = document.getElementById('pRange'); cdy.evokeCS('pval='+pslider.value/100+';'); pslider.oninput = function() {cdy.evokeCS('pval='+ this.value/100+';')};");
+      javascript("var colorval = document.getElementById('color');col=colorval.value;colorval.oninput = function() {col = this.value;};colrgb=hexToRgb(col); cdy.evokeCS('rgbvec_1='+colrgb.r/255+';rgbvec_2='+colrgb.g/255+';rgbvec_3='+colrgb.b/255+';');");
+
+      if(penforceVal>0,
+        javascript("document.getElementById('undo').style.color = 'blue';");
+        javascript("document.getElementById('reset').style.color = 'blue';");
+
+        if(alti<=0,
+          penforceVal=40*widval;
+        ,
+          penforceVal=40*((1-pval)*(aval*(1-alti*2/pi)+(1-aval)*widval)+pval*penforceVal);
+        );
+
+        if(lastpenforce<=0,
+          startnewlist=1;
+          param=0;
+          penforce=penforceVal;
+        ,
+          penforce=lerp(lastpenforce,penforceVal,0.5);
+        ); //end lastpenforce
+
+        if(startnewlist==1,
+          ptforcelist=[];
+          allptlist=[];
+
+          equicount=0;
+          equicount2=0;
+          counttile=0;
+          wholetile=1;
+
+          colorplot((0,0),(1024,0),"listcanvas",
+            p=#.xy;
+            col=imagergba((0,0),(1024,0),"listcanvas",#,interpolate->false);
+            if(p_1<=1,
+              col=(1,0,0,1);
+            ,col=(0,0,0,0));
+            col
+          );//end colorplot
+          lastmat=[];
+          collist=(0,0,0);
+          startnewlist=0;
+        ); //end if startnewlist
+
+        collist=rgbvec;
+
+        ok=false;
+        if(length(ptforcelist)>0,
+          l=length(ptforcelist);
+          newpos=lerp(ptforcelist_l_1,mousePos,0.8);
+          compVal=dist(ptforcelist_l_1,newpos);
+          if(compVal>=eps,
+            if(penforce<10,
+              penforce=10;
+            );//end if penforceVal
+            ok=true;
+          );
+        ,
+          newpos=mousePos;
+          if(penforce<10,
+            penforce=10;
+          );//end if penforceVal
+          ok=true;
+        );//end if
+
+
+        if(ok,
+
+          ptforcelist=concat(ptforcelist,[[newpos,penforce]]);
+          n=length(ptforcelist);
+
+          if(n==1,
+            allptlist=concat(allptlist,[[newpos,penforce]]);
+          );
+
+          if(n>=2,
+            if(n==2,
+
+              equicount=1;
+              if(doorna,
+                vec1=ptforcelist_2_1-ptforcelist_1_1;
+                vec2=1/|vec1|*vec1;
+                vec3=ptforcelist_1_2*vec2;
+                vec4=(vec3_2,-vec3_1);
+                xold=0;
+                counttile=(xold)/(imratiotile*32)+1/imratiotile;
+
+                if(or(flag==7,flag==5),
+                  colorplot((0,0),(1024,0),"listcanvas",
+                    p=#.xy;
+                    col=imagergba((0,0),(1024,0),"listcanvas",#,interpolate->false);
+                    if(p_1<=1.5,
+                      if(ptforcelist_1_2>30,
+                        col=(4,0,0,1);
+                      ,if(ptforcelist_1_2>20,
+                        col=(3,0,0,1);
+                        ,if(ptforcelist_1_2>15,
+                          col=(2,0,0,1);
+                          ,
+                          col=(1,0,0,1);
+                        );
+                       );
+                      );
+                    );
+                    col
+                  );//end colorplot
+                );//flag==7, //flag==5
+
+                if(flag==3,
+                  colorplot((0,0),(1024,0),"listcanvas",
+                    p=#.xy;
+                    col=imagergba((0,0),(1024,0),"listcanvas",#,interpolate->false);
+                    if(p_1<=1.5,
+                      if(ptforcelist_1_2>25,
+                        col=(1,1,0,1);
+                      ,
+                        col=(3,3,0,1);
+                      );
+                    ,col=(0,0,0,0));
+                    col
+                  );//end colorplot
+                );//flag==3
+
+                if(flag==1,
+                  colorplot((0,0),(1024,0),"listcanvas",
+                    p=#.xy;
+                    col=imagergba((0,0),(1024,0),"listcanvas",#,interpolate->false);
+                    if(p_1<=1.5,
+                      if(ptforcelist_1_2>30,
+                        col=(4,0,0,1);
+                      ,if(ptforcelist_1_2>20,
+                        col=(3,0,0,1);
+                        ,if(ptforcelist_1_2>15,
+                          col=(2,0,0,1);
+                          ,
+                          col=(1,0,0,1);
+                        );
+                       );
+                      );
+                    );
+                    col
+                  );//end colorplot
+                );//flag==1
+
+                if(counttile>1,
+                  repeat(floor(counttile)-1,n,
+                  wholetile=wholetile+1;
+                  if(or(flag==7,flag==5),
+                    colorplot((0,0),(1024,0),"listcanvas",
+                      p=#.xy;
+                      col=imagergba((0,0),(1024,0),"listcanvas",#,interpolate->false);
+                      if(p_1<=(n+1)+0.5,if(p_1>(n+1)-0.5,
+                        if(ptforcelist_2_2>30,
+                          col=(4,0,0,1);
+                        ,if(ptforcelist_2_2>20,
+                          col=(3,0,0,1);
+                          ,if(ptforcelist_2_2>15,
+                            col=(2,0,0,1);
+                            ,
+                            col=(1,0,0,1);
+                          );
+                         );
+                        );
+                      ));
+                      col
+                    );//end colorplot
+                  );//flag==7, //flag==5
+
+                  if(flag==3,
+                    colorplot((0,0),(1024,0),"listcanvas",
+                      p=#.xy;
+                      col=imagergba((0,0),(1024,0),"listcanvas",#,interpolate->false);
+                      if(p_1<=(n+1)+0.5,if(p_1>(n+1)-0.5,
+                        if(ptforcelist_2_2>25,
+                          col=(1,1,0,1);
+                          lastcol=imagergba((0,0),(1024,0),"listcanvas",(n,1),interpolate->false);
+                          if(lastcol_1==3,
+                            col=(4,0,0,1);
+                            ,
+                            randnum=random();
+                            if(randnum<0.5,
+                              col=(1,1,0,1);
+                            ,
+                              col=(1,5,0,1);
+                            );
+                          );
+                        ,
+                          col=(3,3,0,1);
+                          lastcol=imagergba((0,0),(1024,0),"listcanvas",(n,1),interpolate->false);
+                          if(lastcol_1==1,
+                            col=(2,0,0,1);
+                            ,
+                            col=(3,3,0,1);
+                          );
+                        );
+                      ));
+                      col
+                    );//end colorplot
+                  );//flag==3
+
+                  if(flag==1,
+                    colorplot((0,0),(1024,0),"listcanvas",
+                      p=#.xy;
+                      col=imagergba((0,0),(1024,0),"listcanvas",#,interpolate->false);
+                      if(p_1<=(n+1)+0.5,if(p_1>(n+1)-0.5,
+                        if(ptforcelist_2_2>30,
+                          col=(4,0,0,1);
+                        ,if(ptforcelist_2_2>20,
+                          col=(3,0,0,1);
+                          ,if(ptforcelist_2_2>15,
+                            col=(2,0,0,1);
+                            ,
+                            col=(1,0,0,1);
+                          );
+                         );
+                        );
+                      ));
+                      col
+                    );//end colorplot
+                  );//flag==1
+
+                );//end repeat
+                ); //end if new wholetile
+
+                mat=map(ptforcelist_1_1-vec3+vec4,ptforcelist_1_1+vec3+vec4,(0,0),(32,0));
+                matact=map(ptforcelist_1_1-vec3+vec4,ptforcelist_1_1+vec3+vec4,(0,0),(32,0));
+                lastmat=mat;
+
+                colorplot((0,0),(1024,0),"ptcanvas",
+                  pointc=(ptforcelist_1_1_1-#.x,ptforcelist_1_1_2-#.y);
+                  impt=(matact*(#.x,#.y,1)).xy;
+                  if(|pointc|<=ptforcelist_1_2+0.5,
+                    col=compvel((mod(impt_1,imratiotile*32),min(max(0,impt_2),32),0,1),scvel,base);
+                  ,col=(0,0,0,-1));
+                  col
+                );//end colorplot
+
+                colorplot((0,0),(1024,0),"mpimcanvas", interpolate->false,
+                  col=(0,0,0,-1);
+                  pointc=(ptforcelist_1_1_1-#.x,ptforcelist_1_1_2-#.y);
+                  if(|pointc|<=ptforcelist_1_2+0.5,
+                    col=compvelnew((ptforcelist_1_1_1,ptforcelist_1_1_2,0,1),scvelnew,base);
+                  );
+                  col
+                );//end colorplot
+
+                colorplot((0,0),(1024,0),"radcanvas", interpolate->false,
+                  col=(0,0,0,-1);
+                  pointc=(ptforcelist_1_1_1-#.x,ptforcelist_1_1_2-#.y);
+                  if(|pointc|<=ptforcelist_1_2+0.5,
+                    col=compmpequi((floor(ptforcelist_1_2),(ptforcelist_1_2-floor(ptforcelist_1_2))*100,0,1),base);
+                  );
+                  col
+                );//end colorplot
+
+                colorplot((0,0),(1024,0),"tilecanvas", interpolate->false,
+                  col=(0,0,0,-1);
+                  pointc=(ptforcelist_1_1_1-#.x,ptforcelist_1_1_2-#.y);
+                  imptact=(matact*(#.x,#.y,1)).xy;
+                  if(|pointc|<=ptforcelist_1_2+0.5,
+                    anzti=1+(imptact_1)/(imratiotile*32);
+                    col=(floor(anzti),0,0,1);
+                  );
+                  col
+                );//end colorplot
+
+                pt=(matact*(ptforcelist_1_1_1,ptforcelist_1_1_2,1)).xy;
+                colorplot((0,0),(1024,0),"mpcanvas", interpolate->false,
+                  col=(0,0,0,-1);
+                  pointc=(ptforcelist_1_1_1-#.x,ptforcelist_1_1_2-#.y);
+                  if(|pointc|<=ptforcelist_1_2+0.5,
+                    col=compmp((16,16,0,1),scvel,base);
+                  );
+                  col
+                );//end colorplot
+
+                eone=mod(equicount,256);
+                etwo=floor(equicount/256);
+
+                colorplot((0,0),(1024,0),"equicanvas", interpolate->false,
+                  col=(0,0,0,-1);
+                  pointc=(ptforcelist_1_1_1-#.x,ptforcelist_1_1_2-#.y);
+                  if(|pointc|<=ptforcelist_1_2+0.5,
+                    col=compmpequi((eone,etwo,0,1),base);
+                  );
+                  col
+                );//end colorplot
+
+              ,
+                //no orna
+                colorplot((0,0),(1024,0),"aktcanvas",
+                  col=imagergba((0,0),(1024,0),"aktcanvas",#,interpolate->true);
+                  pointc=(ptforcelist_1_1_1-#.x,ptforcelist_1_1_2-#.y);
+                  if(|pointc|<=ptforcelist_1_2+0.5,col=(collist_1,collist_2,collist_3,1));
+                  col
+                );//end colorplot
+
+                colorplot((0,0),(1024,0),"aktcanvas",
+                  col=imagergba((0,0),(1024,0),"aktcanvas",#,interpolate->true);
+                  if(col_4<1,
+                    count=0;
+                    list=[[1,0],[0,1],[-1,0],[0,-1]];
+                    repeat(4,i,
+                      coln=imagergba((0,0),(1024,0),"aktcanvas",#+list_i,interpolate->true);
+                      if(coln_4>=1,count=count+1);
+                    );//end repeat
+                    if(count>=2,
+                      col=(collist_1,collist_2,collist_3,0.9);
+                    );//end if count
+                  );//end if col
+                  col
+                );//end colorplot
+
+                colorplot((0,0),(1024,0),"aktcanvas",
+                  col=imagergba((0,0),(1024,0),"aktcanvas",#,interpolate->true);
+                  if(col_4<0.9,
+                    count=0;
+                    list=[[1,0],[0,1],[-1,0],[0,-1]];
+                    repeat(4,i,
+                      coln=imagergba((0,0),(1024,0),"aktcanvas",#+list_i,interpolate->true);
+                      if(coln_4>=0.9,count=count+1);
+                    );//end repeat
+                    if(count>=2,
+                      col=(collist_1,collist_2,collist_3,0.8);
+                    );//end if count
+                  );//end if col
+                  col
+                );//end colorplot
+
+              );//end doorna
+              lastpenforce=ptforcelist_1_2;
+
+            );//end if n==2
+
+            if(n>=3,
+              if(n==3,
+                p0=2*ptforcelist_1_1-ptforcelist_2_1;
+              ,
+                p0=ptforcelist_(n-3)_1;
+              );
+              p1=ptforcelist_(n-2)_1;
+              p2=ptforcelist_(n-1)_1;
+              p3=ptforcelist_(n)_1;
+              vp=(p0,p1,p2,p3);
+              if(n==3,
+                r0=ptforcelist_1_2;
+              ,
+                r0=ptforcelist_(n-3)_2;
+              );
+              r1=ptforcelist_(n-2)_2;
+              r2=ptforcelist_(n-1)_2;
+              r3=ptforcelist_(n)_2;
+              vr=(r0,r1,r2,r3);
+
+              epsi=0.5;
+              pix=5;
+              lastallpt=allptlist_(length(allptlist))_1;
+              repeat(100,z,
+                takt=z*0.01;
+                newcandidate=sp(takt,vp);
+                newdist=|newcandidate-lastallpt|;
+                dgamma=spd(takt,vp);
+                drad=srd(takt,vr);
+                critvar=(drad^2<|dgamma|^2);
+
+                if(and(critvar,|newdist-pix|<epsi),
+                  allptlist=concat(allptlist,[[sp(takt,vp),sr(takt,vr)]]);
+
+                  if(changecanvas==0,
+                    crit=[];
+                    repeat(length(allptlist),
+                      ind=length(allptlist)-(#-1);
+                      if(allptlist_(-1)_2+allptlist_(ind)_2+2>=|allptlist_(-1)_1-allptlist_(ind)_1|,
+                        crit=concat(crit,[[ind,|allptlist_(-1)_1-allptlist_(ind)_1|]]);
+                      );//end if
+                    );
+                    critresult=crit;
+                    contin=true;
+                    repeat(length(crit),
+                      if(contin,
+                        if(crit_#_1==length(allptlist)-(#-1),
+                          critresult=critresult_(2..length(critresult));
+                        ,
+                          contin=false;
+                        );
+                      );//end if contin
+                    ); //end repeat crit
+                    if(length(critresult)>0,
+                      changecanvas=1;
+                    ); //end if
+                  );//end if changecanvas
+
+                  lastallpt=allptlist_(length(allptlist))_1;
+                  retvec=drawtocanvas(newdist,sp(takt,vp),sr(takt,vr),spd(takt,vp),xold,equicount,collist,takt,vp,vr,allptlist,changecanvas, equicount2, lastmat,counttile);
+                  xold=retvec_1;
+                  equicount=retvec_2;
+                  equicount2=retvec_3;
+                  lastmat=retvec_4;
+                  counttile=retvec_5;
+                );//end if
+              );//end repeat
+
+            );//end if n>=3
+
+          );//end if n>=2
+
+          lastpenforce=penforce;
+        );//end if ok
+
+      ,
+
+        lastpenforce=0;
+        n=0;
+      );//end if penforce
+
+      [lastpenforce, startnewlist, ptforcelist, equicount, param, collist, xold, allptlist, changecanvas, equicount2, lastmat, counttile ]
+    );//end fun
+
+    circinverse(ptinv,middle,radius):=(
+      distnew=(radius*radius)/|ptinv-middle|;
+      vec=ptinv-middle;
+      vec=1/|vec|*vec;
+      inverse=(middle+distnew*vec).xy;
+      inverse
+    );//end circinverse
+
+    list=[];
+    repeat(8,
+      list=concat(list,[[cos((#-1)/8*2*pi),sin((#-1)/8*2*pi)]]);
+    );
+    repeat(8,
+      list=concat(list,[[2*cos((#-1)/8*2*pi),2*sin((#-1)/8*2*pi)]]);
+    );
+
+    listj=[];
+    repeat(8,
+      listj=concat(listj,[[cos((#+3)/8*2*pi),sin((#+3)/8*2*pi)]]);
+    );
+    repeat(8,
+      listj=concat(listj,[[2*cos((#+3)/8*2*pi),2*sin((#+3)/8*2*pi)]]);
+    );
+
+
+    averpos(p,which):=(
+      pointa=(0,0);
+      count=0;
+      pointret=(0,0,0,0);
+
+      if(which==0,
+        pdir=expvel(imagergba((0,0),(1024,0),"ptcanvas",p, interpolate->false),scvel,base);
+        mpdir=expmp(imagergba((0,0),(1024,0),"mpcanvas",p, interpolate->false),scvel,base);
+        tdir=imagergba((0,0),(1024,0),"tilecanvas",p, interpolate->false);
+      ,
+        pdir=expvel(imagergba((0,0),(1024,0),"ptcanvas2",p, interpolate->false),scvel,base);
+        mpdir=expmp(imagergba((0,0),(1024,0),"mpcanvas2",p, interpolate->false),scvel,base);
+        tdir=imagergba((0,0),(1024,0),"tilecanvas2",p, interpolate->false);
+      );//end if which
+
+      repeat(16,l,
+        if(which==0,
+          pt=expvel(imagergba((0,0),(1024,0),"ptcanvas",p+list_l, interpolate->false),scvel,base);
+          hpt=expmp(imagergba((0,0),(1024,0),"mpcanvas",p+list_l, interpolate->false),scvel,base);
+          tpt=imagergba((0,0),(1024,0),"tilecanvas",p+list_l, interpolate->false);
+        ,
+          pt=expvel(imagergba((0,0),(1024,0),"ptcanvas2",p+list_l, interpolate->false),scvel,base);
+          hpt=expmp(imagergba((0,0),(1024,0),"mpcanvas2",p+list_l, interpolate->false),scvel,base);
+          tpt=imagergba((0,0),(1024,0),"tilecanvas2",p+list_l, interpolate->false);
+        );//end which
+
+        if(hpt_4>0,
+          tilenum=tpt_1;
+          cooradd=(tilenum-1)*imratiotile*32;
+          pa1=cooradd+pt_1;
+          pa2=pt_2;
+          pointa=pointa+(pa1,pa2);
+          count=count+1;
+        );//end if hpt
+      );//end repeat
+
+      pointpro=1/count*pointa;
+      tnump=tdir_1;
+      caddp=(tnump-1)*imratiotile*32;
+      promod1=mod(pointpro_1,imratiotile*32);
+      if(|pointpro_1-(caddp+promod1)|<=0.001,
+        pointret=compvel((promod1,pointpro_2,0,1),scvel,base);
+      ,
+        pro1=promod1+(pointpro_1-(caddp+promod1));
+        pointret=compvel((pro1,pointpro_2,0,1),scvel,base);
+      );//end if
+
+      if(count<16,
+        if(which==0,
+          pmp=expmpequi(imagergba((0,0),(1024,0),"equicanvas", p, interpolate->false),base);
+        ,
+          pmp=expmpequi(imagergba((0,0),(1024,0),"equicanvas2", p, interpolate->false),base);
+        );//end if which
+        fl=pmp_2*256+pmp_1;
+        pointa=[0,0];
+        count=0;
+        if(which==0,
+          cent=expmp(imagergba((0,0),(1024,0),"mpcanvas", p, interpolate->false),scvel,base);
+        ,
+          cent=expmp(imagergba((0,0),(1024,0),"mpcanvas2", p, interpolate->false),scvel,base);
+        );//end which
+        tilenum=cent_3;
+        cooradd=tilenum*imratiotile*32;
+        cent1=cooradd+cent_1;
+        ocent=(cent1,cent_2);
+
+        repeat(8,i,
+          if(which==0,
+            lpt=expvel(imagergba((0,0),(1024,0),"ptcanvas",p+list_i, interpolate->false),scvel,base);
+            lhpt=expmp(imagergba((0,0),(1024,0),"mpcanvas",p+list_i, interpolate->false),scvel,base);
+            ltpt=imagergba((0,0),(1024,0),"tilecanvas",p+list_i, interpolate->false);
+          ,
+            lpt=expvel(imagergba((0,0),(1024,0),"ptcanvas2",p+list_i, interpolate->false),scvel,base);
+            lhpt=expmp(imagergba((0,0),(1024,0),"mpcanvas2",p+list_i, interpolate->false),scvel,base);
+            ltpt=imagergba((0,0),(1024,0),"tilecanvas2",p+list_i, interpolate->false);
+          );//end which
+
+          if(lhpt_4>0,
+
+            tilenum=ltpt_1;
+            cooradd=(tilenum-1)*imratiotile*32;
+            pa1=cooradd+lpt_1;
+            pa2=lpt_2;
+
+            pointa=pointa+(pa1,pa2);
+            count=count+1;
+          );//if lhpt_4>0
+
+          if(lhpt_4<=0,
+            if(which==0,equicompare=equicount;,equicompare=equicount2;);
+            if(1<fl & fl<equicompare,
+              if(which==0,
+                lptn=expvel(imagergba((0,0),(1024,0),"ptcanvas",p+listj_i, interpolate->false),scvel,base);
+                lhptn=expmp(imagergba((0,0),(1024,0),"mpcanvas",p+listj_i, interpolate->false),scvel,base);
+                ltptn=imagergba((0,0),(1024,0),"tilecanvas",p+listj_i, interpolate->false);
+              ,
+                lptn=expvel(imagergba((0,0),(1024,0),"ptcanvas2",p+listj_i, interpolate->false),scvel,base);
+                lhptn=expmp(imagergba((0,0),(1024,0),"mpcanvas2",p+listj_i, interpolate->false),scvel,base);
+                ltptn=imagergba((0,0),(1024,0),"tilecanvas2",p+listj_i, interpolate->false);
+              );//end which
+
+              if(lhptn_4>0,
+
+                tilenum=ltptn_1;
+                cooradd=(tilenum-1)*imratiotile*32;
+                pa1=cooradd+lptn_1;
+                pa2=lptn_2;
+                if(pa2>16,
+                  pa2=32+(32-pa2);
+                ,
+                  pa2=0-pa2;
+                );
+                pointa=pointa+(pa1,pa2);
+                count=count+1;
+              );//end if lhptn_4
+
+            ,
+
+              if(changecanvas==1,
+                if(which==0,
+                  compareval=1;
+                ,
+                  compareval=equicount2;
+                );
+                if(fl==compareval,
+
+                  if(which==0,
+                    retmpim=expvelnew(imagergba((0,0),(1024,0),"mpimcanvas",p, interpolate->false),scvelnew,base);
+                    retrad=expmpequi(imagergba((0,0),(1024,0),"radcanvas",p, interpolate->false),base);
+                  ,
+                    retmpim=expvelnew(imagergba((0,0),(1024,0),"mpimcanvas2",p, interpolate->false),scvelnew,base);
+                    retrad=expmpequi(imagergba((0,0),(1024,0),"radcanvas2",p, interpolate->false),base);
+                  );//end which
+                  smid=[retmpim_1,retmpim_2];
+                  srad=retrad_1+1/100*retrad_2;
+
+                  p1=p+list_i;
+                  inv=circinverse(p1,smid,srad);
+                  if(which==0,
+                    ret=expvel(imagergba((0,0),(1024,0),"ptcanvas",inv, interpolate->false),scvel,base);
+                    mpret=expmp(imagergba((0,0),(1024,0),"mpcanvas",inv, interpolate->false),scvel,base);
+                    tret=imagergba((0,0),(1024,0),"tilecanvas",inv, interpolate->false);
+                  ,
+                    ret=expvel(imagergba((0,0),(1024,0),"ptcanvas2",inv, interpolate->false),scvel,base);
+                    mpret=expmp(imagergba((0,0),(1024,0),"mpcanvas2",inv, interpolate->false),scvel,base);
+                    tret=imagergba((0,0),(1024,0),"tilecanvas2",inv, interpolate->false);
+                  );//end which
+
+                  tilenum=tret_1;
+                  cooradd=(tilenum-1)*imratiotile*32;
+                  pa1=cooradd+ret_1;
+                  pa2=ret_2;
+                  oinvn=(pa1,pa2);
+
+                  if(|oinvn-ocent|<=16,
+                    opt=circinverse(oinvn,ocent,16);
+                    pointa=pointa+opt;
+                    count=count+1;
+                  );
+
+                ,
+                  if(which==0,
+                    overlappt=imagergba((0,0),(1024,0),"overlapcanvas",p+list_i, interpolate->false);
+                  ,
+                    overlappt=imagergba((0,0),(1024,0),"overlapcanvas2",p+list_i, interpolate->false);
+                  );//end which
+                  if(overlappt_4>0,
+                    if(which==0,
+                      lpt=expvel(imagergba((0,0),(1024,0),"ptcanvas2",p+list_i, interpolate->false),scvel,base);
+                      lhpt=expmp(imagergba((0,0),(1024,0),"mpcanvas2",p+list_i, interpolate->false),scvel,base);
+                      ltpt=imagergba((0,0),(1024,0),"tilecanvas2",p+list_i, interpolate->false);
+                    ,
+                      lpt=expvel(imagergba((0,0),(1024,0),"ptcanvas",p+list_i, interpolate->false),scvel,base);
+                      lhpt=expmp(imagergba((0,0),(1024,0),"mpcanvas",p+list_i, interpolate->false),scvel,base);
+                      ltpt=imagergba((0,0),(1024,0),"tilecanvas",p+list_i, interpolate->false);
+                    );//end which
+                    if(lhpt_4>0,
+                      tilenum=ltpt_1;
+                      cooradd=(tilenum-1)*imratiotile*32;
+                      pa1=cooradd+lpt_1;
+                      pa2=lpt_2;
+
+                      pointa=pointa+(pa1,pa2);
+                      count=count+1;
+                    );//if lhpt_4>0
+                  ,
+                    if(which==0,
+                      lptn=expvel(imagergba((0,0),(1024,0),"ptcanvas",p+listj_i, interpolate->false),scvel,base);
+                      lhptn=expmp(imagergba((0,0),(1024,0),"mpcanvas",p+listj_i, interpolate->false),scvel,base);
+                      ltptn=imagergba((0,0),(1024,0),"tilecanvas",p+listj_i, interpolate->false);
+                    ,
+                      lptn=expvel(imagergba((0,0),(1024,0),"ptcanvas2",p+listj_i, interpolate->false),scvel,base);
+                      lhptn=expmp(imagergba((0,0),(1024,0),"mpcanvas2",p+listj_i, interpolate->false),scvel,base);
+                      ltptn=imagergba((0,0),(1024,0),"tilecanvas2",p+listj_i, interpolate->false);
+                    );//end which
+
+                    if(lhptn_4>0,
+
+                      tilenum=ltptn_1;
+                      cooradd=(tilenum-1)*imratiotile*32;
+                      pa1=cooradd+lptn_1;
+                      pa2=lptn_2;
+
+                      if(pa2>16,
+                        pa2=32+(32-pa2);
+                      ,
+                        pa2=0-pa2;
+                      );
+                      opt=(pa1,pa2);
+                      pointa=pointa+opt;
+                      count=count+1;
+
+                    ,
+
+                      if(which==0,
+                        overlappth=imagergba((0,0),(1024,0),"overlapcanvas",p+listj_i, interpolate->false);
+                      ,
+                        overlappth=imagergba((0,0),(1024,0),"overlapcanvas2",p+listj_i, interpolate->false);
+                      );//end which
+
+                      if(overlappth_4>0,
+                        if(which==0,
+                          lptn=expvel(imagergba((0,0),(1024,0),"ptcanvas2",p+listj_i, interpolate->false),scvel,base);
+                          lhptn=expmp(imagergba((0,0),(1024,0),"mpcanvas2",p+listj_i, interpolate->false),scvel,base);
+                          ltptn=imagergba((0,0),(1024,0),"tilecanvas2",p+listj_i, interpolate->false);
+                        ,
+                          lptn=expvel(imagergba((0,0),(1024,0),"ptcanvas",p+listj_i, interpolate->false),scvel,base);
+                          lhptn=expmp(imagergba((0,0),(1024,0),"mpcanvas",p+listj_i, interpolate->false),scvel,base);
+                          ltptn=imagergba((0,0),(1024,0),"tilecanvas",p+listj_i, interpolate->false);
+                        );//end which
+                        if(lhptn_4>0,
+
+                          tilenum=ltptn_1;
+                          cooradd=(tilenum-1)*imratiotile*32;
+                          pa1=cooradd+lptn_1;
+                          pa2=lptn_2;
+
+                          if(pa2>16,
+                            pa2=32+(32-pa2);
+                          ,
+                            pa2=0-pa2;
+                          );
+                          opt=(pa1,pa2);
+                          pointa=pointa+opt;
+                          count=count+1;
+
+                        );//end if lhptn_4
+                      );//end if overlappth_4
+                    );//end if lhptn_4>0
+                  );//end if overlappt_4
+                );//end if fl 1 oder equicount2
+
+              ,
+                if(which==0,
+                  retmpim=expvelnew(imagergba((0,0),(1024,0),"mpimcanvas",p, interpolate->false),scvelnew,base);
+                  retrad=expmpequi(imagergba((0,0),(1024,0),"radcanvas",p, interpolate->false),base);
+                  rettile=imagergba((0,0),(1024,0),"tilecanvas",p, interpolate->false);
+                ,
+                  retmpim=expvelnew(imagergba((0,0),(1024,0),"mpimcanvas2",p, interpolate->false),scvelnew,base);
+                  retrad=expmpequi(imagergba((0,0),(1024,0),"radcanvas2",p, interpolate->false),base);
+                  rettile=imagergba((0,0),(1024,0),"tilecanvas2",p, interpolate->false);
+                );
+                smid=[retmpim_1,retmpim_2];
+                srad=retrad_1+1/100*retrad_2;
+
+                p1=p+list_i;
+                inv=circinverse(p1,smid,srad);
+                if(which==0,
+                  ret=expvel(imagergba((0,0),(1024,0),"ptcanvas",inv, interpolate->false),scvel,base);
+                  mpret=expmp(imagergba((0,0),(1024,0),"mpcanvas",inv, interpolate->false),scvel,base);
+                  tret=imagergba((0,0),(1024,0),"tilecanvas",inv, interpolate->false);
+                ,
+                  ret=expvel(imagergba((0,0),(1024,0),"ptcanvas2",inv, interpolate->false),scvel,base);
+                  mpret=expmp(imagergba((0,0),(1024,0),"mpcanvas2",inv, interpolate->false),scvel,base);
+                  tret=imagergba((0,0),(1024,0),"tilecanvas2",inv, interpolate->false);
+                );
+
+                tilenum=tret_1;
+                cooradd=(tilenum-1)*imratiotile*32;
+                pa1=cooradd+ret_1;
+                pa2=ret_2;
+                oinvn=(pa1,pa2);
+
+                if(|oinvn-ocent|<=16,
+                  opt=circinverse(oinvn,ocent,16);
+                  pointa=pointa+opt;
+                  count=count+1;
+                );
+              );//end if changecanvas
+            );//end if fl
+          );//end if lhpt
+        );//end repeat
+
+        pointpro=1/count*pointa;
+        tnump=tdir_1;
+        caddp=(tnump-1)*imratiotile*32;
+        promod1=mod(pointpro_1,imratiotile*32);
+        if(|pointpro_1-(caddp+promod1)|<=0.001,
+          pointret=compvel((promod1,pointpro_2,0,1),scvel,base);
+        ,
+          pro1=promod1+(pointpro_1-(caddp+promod1));
+          pointret=compvel((pro1,pointpro_2,0,1),scvel,base);
+        );//end if
+
+      ); //end if count<16
+      pointret
+
+    );//averpos
+
+
+    conftestdevi(p,mpdir,which):=(
+      col=(0,0,0,0);
+      count=0;
+
+      if(which==0,
+        pos0=expvel(imagergba((0,0),(1024,0),"ptcanvas",p),scvel,base);
+        ref0=expmp(imagergba((0,0),(1024,0),"mpcanvas",p),scvel,base);
+        tpt0=imagergba((0,0),(1024,0),"tilecanvas",p, interpolate->false);
+
+        pos1=expvel(imagergba((0,0),(1024,0),"ptcanvas",p+[1,0]),scvel,base);
+        ref1=expmp(imagergba((0,0),(1024,0),"mpcanvas",p+[1,0]),scvel,base);
+        tpt1=imagergba((0,0),(1024,0),"tilecanvas",p+[1,0], interpolate->false);
+        if(ref1_4>0,count=count+1;
+        , ref1overlap=imagergba((0,0),(1024,0),"overlapcanvas",p+[1,0]);
+          if(ref1overlap_4>0,
+            pos1=expvel(imagergba((0,0),(1024,0),"ptcanvas2",p+[1,0]),scvel,base);
+            ref1=expmp(imagergba((0,0),(1024,0),"mpcanvas2",p+[1,0]),scvel,base);
+            tpt1=imagergba((0,0),(1024,0),"tilecanvas2",p+[1,0], interpolate->false);
+            count=count+1;
+          );//end if ref1overlap_4
+        );//end if ref1_4
+        pos2=expvel(imagergba((0,0),(1024,0),"ptcanvas",p+[0,1]),scvel,base);
+        ref2=expmp(imagergba((0,0),(1024,0),"mpcanvas",p+[0,1]),scvel,base);
+        tpt2=imagergba((0,0),(1024,0),"tilecanvas",p+[0,1], interpolate->false);
+        if(ref2_4>0,count=count+1;
+        , ref2overlap=imagergba((0,0),(1024,0),"overlapcanvas",p+[0,1]);
+          if(ref2overlap_4>0,
+            pos2=expvel(imagergba((0,0),(1024,0),"ptcanvas2",p+[0,1]),scvel,base);
+            ref2=expmp(imagergba((0,0),(1024,0),"mpcanvas2",p+[0,1]),scvel,base);
+            tpt2=imagergba((0,0),(1024,0),"tilecanvas2",p+[0,1], interpolate->false);
+            count=count+1;
+          );//end if ref2overlap_4
+        );//end if ref2_4
+        pos3=expvel(imagergba((0,0),(1024,0),"ptcanvas",p+[-1,0]),scvel,base);
+        ref3=expmp(imagergba((0,0),(1024,0),"mpcanvas",p+[-1,0]),scvel,base);
+        tpt3=imagergba((0,0),(1024,0),"tilecanvas",p+[-1,0], interpolate->false);
+        if(ref3_4>0,count=count+1;
+        , ref3overlap=imagergba((0,0),(1024,0),"overlapcanvas",p+[-1,0]);
+          if(ref3overlap_4>0,
+            pos3=expvel(imagergba((0,0),(1024,0),"ptcanvas2",p+[-1,0]),scvel,base);
+            ref3=expmp(imagergba((0,0),(1024,0),"mpcanvas2",p+[-1,0]),scvel,base);
+            tpt3=imagergba((0,0),(1024,0),"tilecanvas2",p+[-1,0], interpolate->false);
+            count=count+1;
+          );//end if ref3overlap_4
+        );//end if ref3_4
+        pos4=expvel(imagergba((0,0),(1024,0),"ptcanvas",p+[0,-1]),scvel,base);
+        ref4=expmp(imagergba((0,0),(1024,0),"mpcanvas",p+[0,-1]),scvel,base);
+        tpt4=imagergba((0,0),(1024,0),"tilecanvas",p+[0,-1], interpolate->false);
+        if(ref4_4>0,count=count+1;
+        , ref4overlap=imagergba((0,0),(1024,0),"overlapcanvas",p+[0,-1]);
+          if(ref4overlap_4>0,
+            pos4=expvel(imagergba((0,0),(1024,0),"ptcanvas2",p+[0,-1]),scvel,base);
+            ref4=expmp(imagergba((0,0),(1024,0),"mpcanvas2",p+[0,-1]),scvel,base);
+            tpt4=imagergba((0,0),(1024,0),"tilecanvas2",p+[0,-1], interpolate->false);
+            count=count+1;
+          );//end if ref4overlap_4
+        );//end if ref4_4
+        pos5=expvel(imagergba((0,0),(1024,0),"ptcanvas",p+[1,1]),scvel,base);
+        ref5=expmp(imagergba((0,0),(1024,0),"mpcanvas",p+[1,1]),scvel,base);
+        tpt5=imagergba((0,0),(1024,0),"tilecanvas",p+[1,1], interpolate->false);
+        if(ref5_4>0,count=count+1;
+        , ref5overlap=imagergba((0,0),(1024,0),"overlapcanvas",p+[1,1]);
+          if(ref5overlap_4>0,
+            pos5=expvel(imagergba((0,0),(1024,0),"ptcanvas2",p+[1,1]),scvel,base);
+            ref5=expmp(imagergba((0,0),(1024,0),"mpcanvas2",p+[1,1]),scvel,base);
+            tpt5=imagergba((0,0),(1024,0),"tilecanvas2",p+[1,1], interpolate->false);
+            count=count+1;
+          );//end if ref5overlap_4
+        );//end if ref5_4
+        pos6=expvel(imagergba((0,0),(1024,0),"ptcanvas",p+[-1,1]),scvel,base);
+        ref6=expmp(imagergba((0,0),(1024,0),"mpcanvas",p+[-1,1]),scvel,base);
+        tpt6=imagergba((0,0),(1024,0),"tilecanvas",p+[-1,1], interpolate->false);
+        if(ref6_4>0,count=count+1;
+        , ref6overlap=imagergba((0,0),(1024,0),"overlapcanvas",p+[-1,1]);
+          if(ref6overlap_4>0,
+            pos6=expvel(imagergba((0,0),(1024,0),"ptcanvas2",p+[-1,1]),scvel,base);
+            ref6=expmp(imagergba((0,0),(1024,0),"mpcanvas2",p+[-1,1]),scvel,base);
+            tpt6=imagergba((0,0),(1024,0),"tilecanvas2",p+[-1,1], interpolate->false);
+            count=count+1;
+          );//end if ref6overlap_4
+        );//end if ref6_4
+        pos7=expvel(imagergba((0,0),(1024,0),"ptcanvas",p+[-1,-1]),scvel,base);
+        ref7=expmp(imagergba((0,0),(1024,0),"mpcanvas",p+[-1,-1]),scvel,base);
+        tpt7=imagergba((0,0),(1024,0),"tilecanvas",p+[-1,-1], interpolate->false);
+        if(ref7_4>0,count=count+1;
+        , ref7overlap=imagergba((0,0),(1024,0),"overlapcanvas",p+[-1,-1]);
+          if(ref7overlap_4>0,
+            pos7=expvel(imagergba((0,0),(1024,0),"ptcanvas2",p+[-1,-1]),scvel,base);
+            ref7=expmp(imagergba((0,0),(1024,0),"mpcanvas2",p+[-1,-1]),scvel,base);
+            tpt7=imagergba((0,0),(1024,0),"tilecanvas2",p+[-1,-1], interpolate->false);
+            count=count+1;
+          );//end if ref7overlap_4
+        );//end if ref7_4
+        pos8=expvel(imagergba((0,0),(1024,0),"ptcanvas",p+[1,-1]),scvel,base);
+        ref8=expmp(imagergba((0,0),(1024,0),"mpcanvas",p+[1,-1]),scvel,base);
+        tpt8=imagergba((0,0),(1024,0),"tilecanvas",p+[1,-1], interpolate->false);
+        if(ref8_4>0,count=count+1;
+        , ref8overlap=imagergba((0,0),(1024,0),"overlapcanvas",p+[1,-1]);
+          if(ref8overlap_4>0,
+            pos8=expvel(imagergba((0,0),(1024,0),"ptcanvas2",p+[1,-1]),scvel,base);
+            ref8=expmp(imagergba((0,0),(1024,0),"mpcanvas2",p+[1,-1]),scvel,base);
+            tpt8=imagergba((0,0),(1024,0),"tilecanvas2",p+[1,-1], interpolate->false);
+            count=count+1;
+          );//end if ref8overlap_4
+        );//end if ref8_4
+      ,//which==1
+
+        pos0=expvel(imagergba((0,0),(1024,0),"ptcanvas2",p),scvel,base);
+        ref0=expmp(imagergba((0,0),(1024,0),"mpcanvas2",p),scvel,base);
+        tpt0=imagergba((0,0),(1024,0),"tilecanvas2",p, interpolate->false);
+
+        pos1=expvel(imagergba((0,0),(1024,0),"ptcanvas2",p+[1,0]),scvel,base);
+        ref1=expmp(imagergba((0,0),(1024,0),"mpcanvas2",p+[1,0]),scvel,base);
+        tpt1=imagergba((0,0),(1024,0),"tilecanvas2",p+[1,0], interpolate->false);
+        if(ref1_4>0,count=count+1;
+        , ref1overlap=imagergba((0,0),(1024,0),"overlapcanvas2",p+[1,0]);
+          if(ref1overlap_4>0,
+            pos1=expvel(imagergba((0,0),(1024,0),"ptcanvas",p+[1,0]),scvel,base);
+            ref1=expmp(imagergba((0,0),(1024,0),"mpcanvas",p+[1,0]),scvel,base);
+            tpt1=imagergba((0,0),(1024,0),"tilecanvas",p+[1,0], interpolate->false);
+            count=count+1;
+          );//end if ref1overlap_4
+        );//end if ref1_4
+        pos2=expvel(imagergba((0,0),(1024,0),"ptcanvas2",p+[0,1]),scvel,base);
+        ref2=expmp(imagergba((0,0),(1024,0),"mpcanvas2",p+[0,1]),scvel,base);
+        tpt2=imagergba((0,0),(1024,0),"tilecanvas2",p+[0,1], interpolate->false);
+        if(ref2_4>0,count=count+1;
+        , ref2overlap=imagergba((0,0),(1024,0),"overlapcanvas2",p+[0,1]);
+          if(ref2overlap_4>0,
+            pos2=expvel(imagergba((0,0),(1024,0),"ptcanvas",p+[0,1]),scvel,base);
+            ref2=expmp(imagergba((0,0),(1024,0),"mpcanvas",p+[0,1]),scvel,base);
+            tpt2=imagergba((0,0),(1024,0),"tilecanvas",p+[0,1], interpolate->false);
+            count=count+1;
+          );//end if ref2overlap_4
+        );//end if ref2_4
+        pos3=expvel(imagergba((0,0),(1024,0),"ptcanvas2",p+[-1,0]),scvel,base);
+        ref3=expmp(imagergba((0,0),(1024,0),"mpcanvas2",p+[-1,0]),scvel,base);
+        tpt3=imagergba((0,0),(1024,0),"tilecanvas2",p+[-1,0], interpolate->false);
+        if(ref3_4>0,count=count+1;
+        , ref3overlap=imagergba((0,0),(1024,0),"overlapcanvas2",p+[-1,0]);
+          if(ref3overlap_4>0,
+            pos3=expvel(imagergba((0,0),(1024,0),"ptcanvas",p+[-1,0]),scvel,base);
+            ref3=expmp(imagergba((0,0),(1024,0),"mpcanvas",p+[-1,0]),scvel,base);
+            tpt3=imagergba((0,0),(1024,0),"tilecanvas",p+[-1,0], interpolate->false);
+            count=count+1;
+          );//end if ref3overlap_4
+        );//end if ref3_4
+        pos4=expvel(imagergba((0,0),(1024,0),"ptcanvas2",p+[0,-1]),scvel,base);
+        ref4=expmp(imagergba((0,0),(1024,0),"mpcanvas2",p+[0,-1]),scvel,base);
+        tpt4=imagergba((0,0),(1024,0),"tilecanvas2",p+[0,-1], interpolate->false);
+        if(ref4_4>0,count=count+1;
+        , ref4overlap=imagergba((0,0),(1024,0),"overlapcanvas2",p+[0,-1]);
+          if(ref4overlap_4>0,
+            pos4=expvel(imagergba((0,0),(1024,0),"ptcanvas",p+[0,-1]),scvel,base);
+            ref4=expmp(imagergba((0,0),(1024,0),"mpcanvas",p+[0,-1]),scvel,base);
+            tpt4=imagergba((0,0),(1024,0),"tilecanvas",p+[0,-1], interpolate->false);
+            count=count+1;
+          );//end if ref4overlap_4
+        );//end if ref4_4
+        pos5=expvel(imagergba((0,0),(1024,0),"ptcanvas2",p+[1,1]),scvel,base);
+        ref5=expmp(imagergba((0,0),(1024,0),"mpcanvas2",p+[1,1]),scvel,base);
+        tpt5=imagergba((0,0),(1024,0),"tilecanvas2",p+[1,1], interpolate->false);
+        if(ref5_4>0,count=count+1;
+        , ref5overlap=imagergba((0,0),(1024,0),"overlapcanvas2",p+[1,1]);
+          if(ref5overlap_4>0,
+            pos5=expvel(imagergba((0,0),(1024,0),"ptcanvas",p+[1,1]),scvel,base);
+            ref5=expmp(imagergba((0,0),(1024,0),"mpcanvas",p+[1,1]),scvel,base);
+            tpt5=imagergba((0,0),(1024,0),"tilecanvas",p+[1,1], interpolate->false);
+            count=count+1;
+          );//end if ref5overlap_4
+        );//end if ref5_4
+        pos6=expvel(imagergba((0,0),(1024,0),"ptcanvas2",p+[-1,1]),scvel,base);
+        ref6=expmp(imagergba((0,0),(1024,0),"mpcanvas2",p+[-1,1]),scvel,base);
+        tpt6=imagergba((0,0),(1024,0),"tilecanvas2",p+[-1,1], interpolate->false);
+        if(ref6_4>0,count=count+1;
+        , ref6overlap=imagergba((0,0),(1024,0),"overlapcanvas2",p+[-1,1]);
+          if(ref6overlap_4>0,
+            pos6=expvel(imagergba((0,0),(1024,0),"ptcanvas",p+[-1,1]),scvel,base);
+            ref6=expmp(imagergba((0,0),(1024,0),"mpcanvas",p+[-1,1]),scvel,base);
+            tpt6=imagergba((0,0),(1024,0),"tilecanvas",p+[-1,1], interpolate->false);
+            count=count+1;
+          );//end if ref6overlap_4
+        );//end if ref6_4
+        pos7=expvel(imagergba((0,0),(1024,0),"ptcanvas2",p+[-1,-1]),scvel,base);
+        ref7=expmp(imagergba((0,0),(1024,0),"mpcanvas2",p+[-1,-1]),scvel,base);
+        tpt7=imagergba((0,0),(1024,0),"tilecanvas2",p+[-1,-1], interpolate->false);
+        if(ref7_4>0,count=count+1;
+        , ref7overlap=imagergba((0,0),(1024,0),"overlapcanvas2",p+[-1,-1]);
+          if(ref7overlap_4>0,
+            pos7=expvel(imagergba((0,0),(1024,0),"ptcanvas",p+[-1,-1]),scvel,base);
+            ref7=expmp(imagergba((0,0),(1024,0),"mpcanvas",p+[-1,-1]),scvel,base);
+            tpt7=imagergba((0,0),(1024,0),"tilecanvas",p+[-1,-1], interpolate->false);
+            count=count+1;
+          );//end if ref7overlap_4
+        );//end if ref7_4
+        pos8=expvel(imagergba((0,0),(1024,0),"ptcanvas2",p+[1,-1]),scvel,base);
+        ref8=expmp(imagergba((0,0),(1024,0),"mpcanvas2",p+[1,-1]),scvel,base);
+        tpt8=imagergba((0,0),(1024,0),"tilecanvas2",p+[1,-1], interpolate->false);
+        if(ref8_4>0,count=count+1;
+        , ref8overlap=imagergba((0,0),(1024,0),"overlapcanvas2",p+[1,-1]);
+          if(ref8overlap_4>0,
+            pos8=expvel(imagergba((0,0),(1024,0),"ptcanvas",p+[1,-1]),scvel,base);
+            ref8=expmp(imagergba((0,0),(1024,0),"mpcanvas",p+[1,-1]),scvel,base);
+            tpt8=imagergba((0,0),(1024,0),"tilecanvas",p+[1,-1], interpolate->false);
+            count=count+1;
+          );//end if ref8overlap_4
+        );//end if ref8_4
+
+      );//end if which
+
+
+      if(count==8,
+
+        tilenum0=tpt0_1;
+        cooradd0=(tilenum0-1)*imratiotile*32;
+        pa01=cooradd0+pos0_1;
+        pa02=pos0_2;
+
+        tilenum1=tpt1_1;
+        cooradd1=(tilenum1-1)*imratiotile*32;
+        pa11=cooradd1+pos1_1;
+        pa12=pos1_2;
+
+        tilenum2=tpt2_1;
+        cooradd2=(tilenum2-1)*imratiotile*32;
+        pa21=cooradd2+pos2_1;
+        pa22=pos2_2;
+
+        tilenum3=tpt3_1;
+        cooradd3=(tilenum3-1)*imratiotile*32;
+        pa31=cooradd3+pos3_1;
+        pa32=pos3_2;
+
+        tilenum4=tpt4_1;
+        cooradd4=(tilenum4-1)*imratiotile*32;
+        pa41=cooradd4+pos4_1;
+        pa42=pos4_2;
+
+        tilenum5=tpt5_1;
+        cooradd5=(tilenum5-1)*imratiotile*32;
+        pa51=cooradd5+pos5_1;
+        pa52=pos5_2;
+
+        tilenum6=tpt6_1;
+        cooradd6=(tilenum6-1)*imratiotile*32;
+        pa61=cooradd6+pos6_1;
+        pa62=pos6_2;
+
+        tilenum7=tpt7_1;
+        cooradd7=(tilenum7-1)*imratiotile*32;
+        pa71=cooradd7+pos7_1;
+        pa72=pos7_2;
+
+        tilenum8=tpt8_1;
+        cooradd8=(tilenum8-1)*imratiotile*32;
+        pa81=cooradd8+pos8_1;
+        pa82=pos8_2;
+
+        total=0;
+        totalscal=0;
+
+        scal=(pa11-pa31)*(pa21-pa41)+(pa12-pa32)*(pa22-pa42);
+        sv=Re(sqrt((pa11-pa31)*(pa11-pa31)+(pa12-pa32)*(pa12-pa32))*sqrt((pa21-pa41)*(pa21-pa41)+(pa22-pa42)*(pa22-pa42)));
+        if(sv>=0.01,
+          scal=1/sv*scal;
+          colt=hue(abs(scal)+1/3);
+          col0=(colt_1,colt_2,colt_3,1);
+          total=total+abs(scal);
+          totalscal=totalscal+1;
+        ); //end if sv
+
+        pxy0=(pa01,pa02);
+        pxy1=(pa11,pa12);
+        pxy2=(pa21,pa22);
+        pxy3=(pa31,pa32);
+        pxy4=(pa41,pa42);
+        pxy5=(pa51,pa52);
+        pxy6=(pa61,pa62);
+        pxy7=(pa71,pa72);
+        pxy8=(pa81,pa82);
+
+
+        lcr1 = 2 - |pxy5 - pxy0| * |pxy2 - pxy3| / (|pxy5 - pxy2| * |pxy3 - pxy0|);
+        lcr2 = 1/2 - |pxy7 - pxy3| * |pxy0 - pxy2| / (|pxy7 - pxy0| * |pxy2 - pxy3|);
+        lcr3 = 1/2 - |pxy4 - pxy0| * |pxy5 - pxy1| / (|pxy1 - pxy4| * |pxy5 - pxy0|);
+        lcr4 = 2 - |pxy7 - pxy0| * |pxy4 - pxy1| / (|pxy7 - pxy4| * |pxy1 - pxy0|);
+        colt1 = hue(1/4* (abs(lcr1) + abs(lcr2) + abs(lcr3) + abs(lcr4))+1/3);
+        col1=(colt1_1,colt1_2,colt1_3,1);
+        c11=0; c1val=0;
+        if(|pxy5 - pxy2| * |pxy3 - pxy0|>0,c11=c11+1; c1val=c1val+abs(lcr1););
+        if(|pxy7 - pxy0| * |pxy2 - pxy3|>0,c11=c11+1; c1val=c1val+abs(lcr2););
+        if(|pxy1 - pxy4| * |pxy5 - pxy0|>0,c11=c11+1; c1val=c1val+abs(lcr3););
+        if(|pxy7 - pxy4| * |pxy1 - pxy0|>0,c11=c11+1; c1val=c1val+abs(lcr4););
+        if(c11>0,
+          total=total+1/c11*c1val;
+          totalscal=totalscal+1;
+        );
+
+
+        lcrval1 = 1 - |pxy1 - pxy0| * |pxy5 - pxy2| / (|pxy5 - pxy1| * |pxy2 - pxy0|);
+        lcrval2 = 1 - |pxy1 - pxy4| * |pxy2 - pxy3| / (|pxy2 - pxy1| * |pxy3 - pxy4|);
+        lcrval4 = 1 - |pxy5 - pxy6| * |pxy7 - pxy8| / (|pxy5 - pxy8| * |pxy6 - pxy7|);
+        colt2=hue(1/3*(abs(lcrval1)+abs(lcrval2)+abs(lcrval4))+1/3);
+        col2=(colt2_1,colt2_2,colt2_3,1);
+        c2=0; c2val=0;
+        if(|pxy5 - pxy1| * |pxy2 - pxy0|>0,c2=c2+1; c2val=c2val+abs(lcrval1););
+        if(|pxy2 - pxy1| * |pxy3 - pxy4|>0,c2=c2+1; c2val=c2val+abs(lcrval2););
+        if(|pxy5 - pxy8| * |pxy6 - pxy7|>0,c2=c2+1; c2val=c2val+abs(lcrval4););
+        if(c2>0,
+          total=total+1/c2*c2val;
+          totalscal=totalscal+1;
+        );
+
+
+        totalval=total/totalscal;
+        col=(totalval,0,0,1);
+
+      );//end if count
+
+      col
+    );//end conftestdevi
+
+
+      flag=10;
+
+      rotmat(a):=((cos(a),-sin(a)),(sin(a),cos(a)));
+
+      createimage("loadm1", 16*imratiotile*64,16*64);
+      createimage("loadp1", 16*imratiotile*64,16*64);
+      createimage("loadm2", 16*imratiotile*64,16*64);
+      createimage("loadp2", 16*imratiotile*64,16*64);
+      createimage("load1", 16*imratiotile*64,16*64);
+      createimage("load2", 16*imratiotile*64,16*64);
+      createimage("load3", 16*imratiotile*64,16*64);
+      createimage("load4", 16*imratiotile*64,16*64);
+      createimage("load5", 16*imratiotile*64,16*64);
+      createimage("load6", 16*imratiotile*64,16*64);
+      createimage("load7", 16*imratiotile*64,16*64);
+      createimage("load8", 16*imratiotile*64,16*64);
+      createimage("load9", 16*imratiotile*64,16*64);
+      createimage("load10", 16*imratiotile*64,16*64);
+      createimage("load11", 16*imratiotile*64,16*64);
+
+    </script>
+
+    <script id='csmouseclick' type='text/x-cindyscript'>
+    if(mouse().x>1070,
+      if(and(mouse().y>=125,mouse().y<225), C.xy=(1074,205); flag=1;loadvar=0;);
+      if(and(mouse().y>=225,mouse().y<275), C.xy=(1074,255); flag=3;loadvar=0;);
+      if(and(mouse().y>=275,mouse().y<325), C.xy=(1074,305); flag=4;loadvar=0;);
+      if(and(mouse().y>=325,mouse().y<375), C.xy=(1074,355); flag=5;loadvar=0;);
+      if(and(mouse().y>=375,mouse().y<425), C.xy=(1074,405); flag=6;loadvar=0;);
+      if(mouse().y>=425, C.xy=(1074,455); flag=7;loadvar=0;);
+
+      if(and(mouse().y<125,mouse().y>=75), D.xy=(1074,105); flago=0;);
+      if(mouse().y<75, D.xy=(1074,55); flago=1;);
+    );
+
+    </script>
+
+
+    <script id="csmousedrag" type="text/x-cindyscript">
+    lastid=id;
+    id=multiid();
+    mouseOld=mouseVec;
+    mouseVec=mouse().xy;
+
+    if(and(lastid==1,id==0),  lastpenforce=0;  );
+    if(and(id>=1,penforce()==0), finger=1 , finger=0 );
+    if(finger==1,
+        finres=fun(eps, 100 , penaltitude(), mouseVec, lastpenforce, startnewlist, ptforcelist, allptlist,
+        equicount, collist,param, xold, changecanvas,
+        equicount2, lastmat, counttile );
+    ,
+        finres=fun(eps, penforce(), penaltitude() , mouseVec, lastpenforce, startnewlist, ptforcelist, allptlist,
+        equicount, collist,param, xold, changecanvas,
+        equicount2, lastmat, counttile );
+    ); //end if finger
+
+    lastpenforce=finres_1;
+    startnewlist=finres_2;
+    ptforcelist=finres_3;
+    equicount=finres_4;
+    param=finres_5;
+    collist=finres_6;
+    xold=finres_7;
+    allptlist=finres_8;
+    changecanvas=finres_9;
+    equicount2=finres_10;
+    lastmat=finres_11;
+    counttile=finres_12;
+
+    if(isodd(countorna),doorna=true);
+    if(iseven(countorna),doorna=false);
+
+    </script>
+
+
+    <script id="csmouseup" type="text/x-cindyscript">
+    drag=false;
+    resetclock();
+    </script>
+
+
+    <script id="csmousedown" type="text/x-cindyscript">
+    if(drag==false,
+      lastpenforce=0;
+    );
+
+    colorplot((0,0),(1024,0),"storecanvas",
+      akt=imagergba((0,0),(1024,0),"aktcanvas",# ,interpolate->true);
+      store=imagergba((0,0),(1024,0),"storecanvas",# ,interpolate->true);
+      if(akt_4<=0,
+        col=store,
+        if(akt_4<1,
+          if(store_4>0,aa=akt_4; cc=aa*akt+(1-aa)*store; col=(cc_1,cc_2,cc_3,1), col=akt );
+        ,
+          col=akt;
+        );
+      ); //end if akt_4
+
+      if(changecanvas==1,
+        akt2=imagergba((0,0),(1024,0),"aktcanvas2",# ,interpolate->true);
+        if(akt2_4<=0,
+          col=col;
+        ,
+          col=akt2;
+        ); //end if akt_4
+      );//end if changecanvas
+
+      col
+    ); //end colorplot
+
+
+    colorplot((0,0),(1024,0),"aktcanvas",(0,0,0,-1));
+    colorplot((0,0),(1024,0),"conftestcanvas",(0,0,0,-1));
+    colorplot((0,0),(1024,0),"countcanvas",(0,0,0,-1));
+    colorplot((0,0),(1024,0),"ptcanvas",(0,0,0,-1));
+    colorplot((0,0),(1024,0),"mpcanvas",(0,0,0,-1));
+    colorplot((0,0),(1024,0),"equicanvas",(0,0,0,-1));
+    colorplot((0,0),(1024,0),"mpimcanvas",(0,0,0,-1));
+    colorplot((0,0),(1024,0),"radcanvas",(0,0,0,-1));
+
+    colorplot((0,0),(1024,0),"aktcanvas2",(0,0,0,-1));
+    colorplot((0,0),(1024,0),"conftestcanvas2",(0,0,0,-1));
+    colorplot((0,0),(1024,0),"countcanvas2",(0,0,0,-1));
+    colorplot((0,0),(1024,0),"ptcanvas2",(0,0,0,-1));
+    colorplot((0,0),(1024,0),"mpcanvas2",(0,0,0,0));
+    colorplot((0,0),(1024,0),"equicanvas2",(0,0,0,-1));
+    colorplot((0,0),(1024,0),"mpimcanvas2",(0,0,0,-1));
+    colorplot((0,0),(1024,0),"radcanvas2",(0,0,0,-1));
+
+    colorplot((0,0),(1024,0),"overlapcanvas",(0,0,0,0));
+    colorplot((0,0),(1024,0),"overlapcanvas2",(0,0,0,0));
+
+    drag=true;
+    changecanvas=0;
+
+    </script>
+
+    <script id="csdraw" type="text/x-cindyscript">
+
+    imsize=imagesize("orna");
+    imsizefloral=imagesize("floral1");
+    imsizetext1=imagesize("text1");
+    imsizetext2=imagesize("text2");
+    imsizetext3=imagesize("text3");
+    imsizetext4=imagesize("text4");
+
+    if(and(length(imsize)>1,loadvar==0),
+
+      loadvar=1;
+
+      if(or(flag==7,flag==5),
+        imratio=1;
+        imratiotile=1;
+        if(imratio<1,
+          imratio=imratio*ceil(1/imratio);
+        );
+        scvel=imratio*64;
+        createimage("load1", 16*imratiotile*64,16*64);
+        createimage("load2", 16*imratiotile*64,16*64);
+        createimage("load3", 16*imratiotile*64,16*64);
+        createimage("load4", 16*imratiotile*64,16*64);
+
+        colorplot((0,0),(imratiotile*32,0),"load1",
+          p=#.xy;
+          if(|(mod(p_1,32),p_2)-(0,16)|<16,alt1=0,alt1=1); if(|(mod(p_1,32),p_2)-(0,16)|<15.5,alt1a=0,alt1a=1);
+          if(|(mod(p_1,32),p_2)-(32,16)|<16,alt2=0,alt2=1); if(|(mod(p_1,32),p_2)-(32,16)|<15.5,alt2a=0,alt2a=1);
+          col=(0,0,0,0);
+          if(alt1*alt2==0,
+            col=(0,0,0,1);
+          );
+          if(alt1a*alt2a==0,
+            ch=hue(0.4);
+            col=(ch_1,ch_2,ch_3,1);
+          );
+
+          col
+        );//load1
+        colorplot((0,0),(imratiotile*32,0),"load2",
+          p=#.xy;
+          if(|(mod(p_1,32),p_2)-(0,16)|<16,alt1=0,alt1=1); if(|(mod(p_1,32),p_2)-(0,16)|<15.5,alt1a=0,alt1a=1);
+          if(|(mod(p_1,32),p_2)-(32,16)|<16,alt2=0,alt2=1); if(|(mod(p_1,32),p_2)-(32,16)|<15.5,alt2a=0,alt2a=1);
+          col=(0,0,0,0);
+          if(alt1*alt2==0,
+            col=(0,0,0,1);
+          );
+          if(alt1a*alt2a==0,
+            ch=hue(0.4);
+            col=(ch_1,ch_2,ch_3,1);
+          );
+          if(|(mod(p_1,32),p_2)-(16,4)|<4,alt3=0,alt3=1); if(|(mod(p_1,32),p_2)-(16,4)|<3.5,alt3a=0,alt3a=1);
+          if(|(mod(p_1,32),p_2)-(16,28)|<4,alt4=0,alt4=1); if(|(mod(p_1,32),p_2)-(16,28)|<3.5,alt4a=0,alt4a=1);
+          if(alt3*alt4==0,
+            col=(0,0,0,1);
+          );
+          if(alt3a*alt4a==0,
+            ch=hue(0.5);
+            col=(ch_1,ch_2,ch_3,1);
+          );
+          col
+        );//load2
+        colorplot((0,0),(imratiotile*32,0),"load3",
+          p=#.xy;
+          if(|(mod(p_1,32),p_2)-(0,16)|<16,alt1=0,alt1=1); if(|(mod(p_1,32),p_2)-(0,16)|<15.5,alt1a=0,alt1a=1);
+          if(|(mod(p_1,32),p_2)-(32,16)|<16,alt2=0,alt2=1); if(|(mod(p_1,32),p_2)-(32,16)|<15.5,alt2a=0,alt2a=1);
+          col=(0,0,0,0);
+          if(alt1*alt2==0,
+            col=(0,0,0,1);
+          );
+          if(alt1a*alt2a==0,
+            ch=hue(0.4);
+            col=(ch_1,ch_2,ch_3,1);
+          );
+          if(|(mod(p_1,32),p_2)-(16,4)|<4,alt3=0,alt3=1); if(|(mod(p_1,32),p_2)-(16,4)|<3.5,alt3a=0,alt3a=1);
+          if(|(mod(p_1,32),p_2)-(16,28)|<4,alt4=0,alt4=1); if(|(mod(p_1,32),p_2)-(16,28)|<3.5,alt4a=0,alt4a=1);
+          if(alt3*alt4==0,
+            col=(0,0,0,1);
+          );
+          if(alt3a*alt4a==0,
+            ch=hue(0.5);
+            col=(ch_1,ch_2,ch_3,1);
+          );
+
+          if(|(mod(p_1,32),p_2)-(32/3,16/9)|<16/9,alt5=0,alt5=1); if(|(mod(p_1,32),p_2)-(32/3,16/9)|<16/9-0.5,alt5a=0,alt5a=1);
+          if(|(mod(p_1,32),p_2)-(32/3,32-16/9)|<16/9,alt6=0,alt6=1); if(|(mod(p_1,32),p_2)-(32/3,32-16/9)|<16/9-0.5,alt6a=0,alt6a=1);
+          if(|(mod(p_1,32),p_2)-(32*2/3,16/9)|<16/9,alt7=0,alt7=1); if(|(mod(p_1,32),p_2)-(32*2/3,16/9)|<16/9-0.5,alt7a=0,alt7a=1);
+          if(|(mod(p_1,32),p_2)-(32*2/3,32-16/9)|<16/9,alt8=0,alt8=1); if(|(mod(p_1,32),p_2)-(32*2/3,32-16/9)|<16/9-0.5,alt8a=0,alt8a=1);
+          if(|(mod(p_1,32),p_2)-(16,8+16/12)|<16/12,alt9=0,alt9=1); if(|(mod(p_1,32),p_2)-(16,8+16/12)|<16/12-0.5,alt9a=0,alt9a=1);
+          if(|(mod(p_1,32),p_2)-(16,32-8-16/12)|<16/12,alt10=0,alt10=1); if(|(mod(p_1,32),p_2)-(16,32-8-16/12)|<16/12-0.5,alt10a=0,alt10a=1);
+          if(alt5*alt6*alt7*alt8*alt9*alt10==0,
+            col=(0,0,0,1);
+          );
+          if(alt5a*alt6a*alt7a*alt8a*alt9a*alt10a==0,
+            ch=hue(0.6);
+            col=(ch_1,ch_2,ch_3,1);
+          );
+
+          col
+        );//load3
+        colorplot((0,0),(imratiotile*32,0),"load4",
+          p=#.xy;
+          if(|(mod(p_1,32),p_2)-(0,16)|<16,alt1=0,alt1=1); if(|(mod(p_1,32),p_2)-(0,16)|<15.5,alt1a=0,alt1a=1);
+          if(|(mod(p_1,32),p_2)-(32,16)|<16,alt2=0,alt2=1); if(|(mod(p_1,32),p_2)-(32,16)|<15.5,alt2a=0,alt2a=1);
+          col=(0,0,0,0);
+          if(alt1*alt2==0,
+            col=(0,0,0,1);
+          );
+          if(alt1a*alt2a==0,
+            ch=hue(0.4);
+            col=(ch_1,ch_2,ch_3,1);
+          );
+          if(|(mod(p_1,32),p_2)-(16,4)|<4,alt3=0,alt3=1); if(|(mod(p_1,32),p_2)-(16,4)|<3.5,alt3a=0,alt3a=1);
+          if(|(mod(p_1,32),p_2)-(16,28)|<4,alt4=0,alt4=1); if(|(mod(p_1,32),p_2)-(16,28)|<3.5,alt4a=0,alt4a=1);
+          if(alt3*alt4==0,
+            col=(0,0,0,1);
+          );
+          if(alt3a*alt4a==0,
+            ch=hue(0.5);
+            col=(ch_1,ch_2,ch_3,1);
+          );
+
+          if(|(mod(p_1,32),p_2)-(32/3,16/9)|<16/9,alt5=0,alt5=1); if(|(mod(p_1,32),p_2)-(32/3,16/9)|<16/9-0.5,alt5a=0,alt5a=1);
+          if(|(mod(p_1,32),p_2)-(32/3,32-16/9)|<16/9,alt6=0,alt6=1); if(|(mod(p_1,32),p_2)-(32/3,32-16/9)|<16/9-0.5,alt6a=0,alt6a=1);
+          if(|(mod(p_1,32),p_2)-(32*2/3,16/9)|<16/9,alt7=0,alt7=1); if(|(mod(p_1,32),p_2)-(32*2/3,16/9)|<16/9-0.5,alt7a=0,alt7a=1);
+          if(|(mod(p_1,32),p_2)-(32*2/3,32-16/9)|<16/9,alt8=0,alt8=1); if(|(mod(p_1,32),p_2)-(32*2/3,32-16/9)|<16/9-0.5,alt8a=0,alt8a=1);
+          if(|(mod(p_1,32),p_2)-(16,8+16/12)|<16/12,alt9=0,alt9=1); if(|(mod(p_1,32),p_2)-(16,8+16/12)|<16/12-0.5,alt9a=0,alt9a=1);
+          if(|(mod(p_1,32),p_2)-(16,32-8-16/12)|<16/12,alt10=0,alt10=1); if(|(mod(p_1,32),p_2)-(16,32-8-16/12)|<16/12-0.5,alt10a=0,alt10a=1);
+          if(alt5*alt6*alt7*alt8*alt9*alt10==0,
+            col=(0,0,0,1);
+          );
+          if(alt5a*alt6a*alt7a*alt8a*alt9a*alt10a==0,
+            ch=hue(0.6);
+            col=(ch_1,ch_2,ch_3,1);
+          );
+          if(|(mod(p_1,32),p_2)-(32/4,16/16)|<16/16,alt11=0,alt11=1); if(|(mod(p_1,32),p_2)-(32/4,16/16)|<16/16-0.5,alt11a=0,alt11a=1);
+          if(|(mod(p_1,32),p_2)-(32/4,32-16/16)|<16/16,alt12=0,alt12=1); if(|(mod(p_1,32),p_2)-(32/4,32-16/16)|<16/16-0.5,alt12a=0,alt12a=1);
+          if(|(mod(p_1,32),p_2)-(32*3/4,16/16)|<16/16,alt13=0,alt13=1); if(|(mod(p_1,32),p_2)-(32*3/4,16/16)|<16/16-0.5,alt13a=0,alt13a=1);
+          if(|(mod(p_1,32),p_2)-(32*3/4,32-16/16)|<16/16,alt14=0,alt14=1); if(|(mod(p_1,32),p_2)-(32*3/4,32-16/16)|<16/16-0.5,alt14a=0,alt14a=1);
+          if(|(mod(p_1,32),p_2)-(32*2/5,16/25)|<16/25,alt15=0,alt15=1); if(|(mod(p_1,32),p_2)-(32*2/5,16/25)|<16/25-0.5,alt15a=0,alt15a=1);
+          if(|(mod(p_1,32),p_2)-(32*2/5,32-16/25)|<16/25,alt16=0,alt16=1); if(|(mod(p_1,32),p_2)-(32*2/5,32-16/25)|<16/25-0.5,alt16a=0,alt16a=1);
+          if(|(mod(p_1,32),p_2)-(32*3/5,16/25)|<16/25,alt17=0,alt17=1); if(|(mod(p_1,32),p_2)-(32*3/5,16/25)|<16/25-0.5,alt17a=0,alt17a=1);
+          if(|(mod(p_1,32),p_2)-(32*3/5,32-16/25)|<16/25,alt18=0,alt18=1); if(|(mod(p_1,32),p_2)-(32*3/5,32-16/25)|<16/25-0.5,alt18a=0,alt18a=1);
+          if(|(mod(p_1,32),p_2)-(16,8+2*16/12+16/24)|<16/24,alt19=0,alt19=1); if(|(mod(p_1,32),p_2)-(16,8+2*16/12+16/24)|<16/24-0.5,alt19a=0,alt19a=1);
+          if(|(mod(p_1,32),p_2)-(16,32-8-2*16/12-16/24)|<16/24,alt20=0,alt20=1); if(|(mod(p_1,32),p_2)-(16,32-8-2*16/12-16/24)|<16/24-0.5,alt20a=0,alt20a=1);
+          if(alt11*alt12*alt13*alt14*alt15*alt16*alt17*alt18*alt19*alt20==0,
+            col=(0,0,0,1);
+          );
+          if(alt11a*alt12a*alt13a*alt14a*alt15a*alt16a*alt17a*alt18a*alt19a*alt20a==0,
+            ch=hue(0.7);
+            col=(ch_1,ch_2,ch_3,1);
+          );
+
+          col
+        );//load4
+      );//flag==7, //flag==5
+
+      if(flag==6,
+        imratio=1;
+        imratiotile=1;
+        if(imratio<1,
+          imratio=imratio*ceil(1/imratio);
+        );
+        scvel=imratio*64;
+        createimage("load1", 16*imratiotile*64,16*64);
+
+        colorplot((0,0),(imratiotile*32,0),"load1",
+          p=#.xy;
+
+          if(p_2>28,alt1=0,alt1=1);if(p_2>28.5,if(p_2<31.5,alt1a=0,alt1a=1),alt1a=1);
+          if(p_2<4,alt2=0,alt2=1);if(p_2>0.5,if(p_2<3.5,alt2a=0,alt2a=1),alt2a=1);
+          if(p_2<18,if(p_2>14,alt3=0,alt3=1),alt3=1);if(p_2>14.5,if(p_2<17.5,alt3a=0,alt3a=1),alt3a=1);
+
+          if(p_2>18,if(p_2<28,if(|(mod(p_1,8),p_2)-(0,23)|<4,alt4=0,alt4=1),alt4=1),alt4=1);
+          if(p_2>18,if(p_2<28,if(|(mod(p_1,8),p_2)-(8,23)|<4,alt5=0,alt5=1),alt5=1),alt5=1);
+
+          if(p_2>18,if(p_2<28,if(|(p_1,p_2)-(0,23)|<3.5,alt6=0,alt6=1),alt6=1),alt6=1);
+          if(p_2>18,if(p_2<28,if(|(p_1,p_2)-(32,23)|<3.5,alt7=0,alt7=1),alt7=1),alt7=1);
+          if(p_2>18,if(p_2<28,if(|(p_1,p_2)-(8,23)|<3.5,alt6a=0,alt6a=1),alt6a=1),alt6a=1);
+          if(p_2>18,if(p_2<28,if(|(p_1,p_2)-(16,23)|<3.5,alt6b=0,alt6b=1),alt6b=1),alt6b=1);
+          if(p_2>18,if(p_2<28,if(|(p_1,p_2)-(24,23)|<3.5,alt6c=0,alt6c=1),alt6c=1),alt6c=1);
+
+
+          otr6=(8+4,9)+rotmat(pi/4)*((11+4,12)-(8+4,9));
+          ltr6=(8+4,9)+rotmat(2*pi/3)*(otr6-(8+4,9));
+          rtr6=(8+4,9)+rotmat(2*pi*2/3)*(otr6-(8+4,9));
+          ptr1=(8+4,9)+rotmat(2*pi/3)*(p-(8+4,9));
+          ptr2=(8+4,9)+rotmat(2*pi*2/3)*(p-(8+4,9));
+          if(p_2>ltr6_2,if(p_1<rtr6_1,if(p_1>ltr6_1,if(ptr1_2>ltr6_2,if(ptr1_1>ltr6_1,if(ptr1_1<rtr6_1,if(ptr2_2>ltr6_2,if(ptr2_1>ltr6_1,if(ptr2_1<rtr6_1,alt8=0,alt8=1),alt8=1),alt8=1),alt8=1),alt8=1),alt8=1),alt8=1),alt8=1),alt8=1);
+          if(p_2>ltr6_2+0.5,if(p_1<rtr6_1-0.5,if(p_1>ltr6_1+0.5,if(ptr1_2>ltr6_2+0.5,if(ptr1_1>ltr6_1+0.5,if(ptr1_1<rtr6_1-0.5,if(ptr2_2>ltr6_2+0.5,if(ptr2_1>ltr6_1+0.5,if(ptr2_1<rtr6_1-0.5,alt8b=0,alt8b=1),alt8b=1),alt8b=1),alt8b=1),alt8b=1),alt8b=1),alt8b=1),alt8b=1),alt8b=1);
+
+          prot=(8+4,9)+rotmat(pi/3)*(p-(8+4,9));
+          ptr1=(8+4,9)+rotmat(2*pi/3)*(prot-(8+4,9));
+          ptr2=(8+4,9)+rotmat(2*pi*2/3)*(prot-(8+4,9));
+          if(prot_2>ltr6_2,if(prot_1<rtr6_1,if(prot_1>ltr6_1,if(ptr1_2>ltr6_2,if(ptr1_1>ltr6_1,if(ptr1_1<rtr6_1,if(ptr2_2>ltr6_2,if(ptr2_1>ltr6_1,if(ptr2_1<rtr6_1,alt8a=0,alt8a=1),alt8a=1),alt8a=1),alt8a=1),alt8a=1),alt8a=1),alt8a=1),alt8a=1),alt8a=1);
+          if(prot_2>ltr6_2+0.5,if(prot_1<rtr6_1-0.5,if(prot_1>ltr6_1+0.5,if(ptr1_2>ltr6_2+0.5,if(ptr1_1>ltr6_1+0.5,if(ptr1_1<rtr6_1-0.5,if(ptr2_2>ltr6_2+0.5,if(ptr2_1>ltr6_1+0.5,if(ptr2_1<rtr6_1-0.5,alt8c=0,alt8c=1),alt8c=1),alt8c=1),alt8c=1),alt8c=1),alt8c=1),alt8c=1),alt8c=1),alt8c=1);
+
+          otr7=(24+4,9)+rotmat(pi/4)*((27+4,12)-(24+4,9));
+          ltr7=(24+4,9)+rotmat(2*pi/3)*(otr7-(24+4,9));
+          rtr7=(24+4,9)+rotmat(2*pi*2/3)*(otr7-(24+4,9));
+          ptr1=(24+4,9)+rotmat(2*pi/3)*(p-(24+4,9));
+          ptr2=(24+4,9)+rotmat(2*pi*2/3)*(p-(24+4,9));
+          if(p_2>ltr7_2,if(p_1<rtr7_1,if(p_1>ltr7_1,if(ptr1_2>ltr7_2,if(ptr1_1>ltr7_1,if(ptr1_1<rtr7_1,if(ptr2_2>ltr7_2,if(ptr2_1>ltr7_1,if(ptr2_1<rtr7_1,alt9=0,alt9=1),alt9=1),alt9=1),alt9=1),alt9=1),alt9=1),alt9=1),alt9=1),alt9=1);
+          if(p_2>ltr7_2+0.5,if(p_1<rtr7_1-0.5,if(p_1>ltr7_1+0.5,if(ptr1_2>ltr7_2+0.5,if(ptr1_1>ltr7_1+0.5,if(ptr1_1<rtr7_1-0.5,if(ptr2_2>ltr7_2+0.5,if(ptr2_1>ltr7_1+0.5,if(ptr2_1<rtr7_1-0.5,alt9b=0,alt9b=1),alt9b=1),alt9b=1),alt9b=1),alt9b=1),alt9b=1),alt9b=1),alt9b=1),alt9b=1);
+
+          prot=(24+4,9)+rotmat(pi/3)*(p-(24+4,9));
+          ptr1=(24+4,9)+rotmat(2*pi/3)*(prot-(24+4,9));
+          ptr2=(24+4,9)+rotmat(2*pi*2/3)*(prot-(24+4,9));
+          if(prot_2>ltr7_2,if(prot_1<rtr7_1,if(prot_1>ltr7_1,if(ptr1_2>ltr7_2,if(ptr1_1>ltr7_1,if(ptr1_1<rtr7_1,if(ptr2_2>ltr7_2,if(ptr2_1>ltr7_1,if(ptr2_1<rtr7_1,alt9a=0,alt9a=1),alt9a=1),alt9a=1),alt9a=1),alt9a=1),alt9a=1),alt9a=1),alt9a=1),alt9a=1);
+          if(prot_2>ltr7_2+0.5,if(prot_1<rtr7_1-0.5,if(prot_1>ltr7_1+0.5,if(ptr1_2>ltr7_2+0.5,if(ptr1_1>ltr7_1+0.5,if(ptr1_1<rtr7_1-0.5,if(ptr2_2>ltr7_2+0.5,if(ptr2_1>ltr7_1+0.5,if(ptr2_1<rtr7_1-0.5,alt9c=0,alt9c=1),alt9c=1),alt9c=1),alt9c=1),alt9c=1),alt9c=1),alt9c=1),alt9c=1),alt9c=1);
+
+          otr6=(0+4,9)+rotmat(pi/4)*((3+4,12)-(0+4,9));
+          ltr6=(0+4,9)+rotmat(2*pi/3)*(otr6-(0+4,9));
+          rtr6=(0+4,9)+rotmat(2*pi*2/3)*(otr6-(0+4,9));
+          ptr1=(0+4,9)+rotmat(2*pi/3)*(p-(0+4,9));
+          ptr2=(0+4,9)+rotmat(2*pi*2/3)*(p-(0+4,9));
+          if(p_2>ltr6_2,if(p_1<rtr6_1,if(p_1>ltr6_1,if(ptr1_2>ltr6_2,if(ptr1_1>ltr6_1,if(ptr1_1<rtr6_1,if(ptr2_2>ltr6_2,if(ptr2_1>ltr6_1,if(ptr2_1<rtr6_1,alt10=0,alt10=1),alt10=1),alt10=1),alt10=1),alt10=1),alt10=1),alt10=1),alt10=1),alt10=1);
+          if(p_2>ltr6_2+0.5,if(p_1<rtr6_1-0.5,if(p_1>ltr6_1+0.5,if(ptr1_2>ltr6_2+0.5,if(ptr1_1>ltr6_1+0.5,if(ptr1_1<rtr6_1-0.5,if(ptr2_2>ltr6_2+0.5,if(ptr2_1>ltr6_1+0.5,if(ptr2_1<rtr6_1-0.5,alt10b=0,alt10b=1),alt10b=1),alt10b=1),alt10b=1),alt10b=1),alt10b=1),alt10b=1),alt10b=1),alt10b=1);
+
+          prot=(0+4,9)+rotmat(pi/3)*(p-(0+4,9));
+          ptr1=(0+4,9)+rotmat(2*pi/3)*(prot-(0+4,9));
+          ptr2=(0+4,9)+rotmat(2*pi*2/3)*(prot-(0+4,9));
+          if(prot_2>ltr6_2,if(prot_1<rtr6_1,if(prot_1>ltr6_1,if(ptr1_2>ltr6_2,if(ptr1_1>ltr6_1,if(ptr1_1<rtr6_1,if(ptr2_2>ltr6_2,if(ptr2_1>ltr6_1,if(ptr2_1<rtr6_1,alt10a=0,alt10a=1),alt10a=1),alt10a=1),alt10a=1),alt10a=1),alt10a=1),alt10a=1),alt10a=1),alt10a=1);
+          if(prot_2>ltr6_2+0.5,if(prot_1<rtr6_1-0.5,if(prot_1>ltr6_1+0.5,if(ptr1_2>ltr6_2+0.5,if(ptr1_1>ltr6_1+0.5,if(ptr1_1<rtr6_1-0.5,if(ptr2_2>ltr6_2+0.5,if(ptr2_1>ltr6_1+0.5,if(ptr2_1<rtr6_1-0.5,alt10c=0,alt10c=1),alt10c=1),alt10c=1),alt10c=1),alt10c=1),alt10c=1),alt10c=1),alt10c=1),alt10c=1);
+
+          otr7=(16+4,9)+rotmat(pi/4)*((19+4,12)-(16+4,9));
+          ltr7=(16+4,9)+rotmat(2*pi/3)*(otr7-(16+4,9));
+          rtr7=(16+4,9)+rotmat(2*pi*2/3)*(otr7-(16+4,9));
+          ptr1=(16+4,9)+rotmat(2*pi/3)*(p-(16+4,9));
+          ptr2=(16+4,9)+rotmat(2*pi*2/3)*(p-(16+4,9));
+          if(p_2>ltr7_2,if(p_1<rtr7_1,if(p_1>ltr7_1,if(ptr1_2>ltr7_2,if(ptr1_1>ltr7_1,if(ptr1_1<rtr7_1,if(ptr2_2>ltr7_2,if(ptr2_1>ltr7_1,if(ptr2_1<rtr7_1,alt11=0,alt11=1),alt11=1),alt11=1),alt11=1),alt11=1),alt11=1),alt11=1),alt11=1),alt11=1);
+          if(p_2>ltr7_2+0.5,if(p_1<rtr7_1-0.5,if(p_1>ltr7_1+0.5,if(ptr1_2>ltr7_2+0.5,if(ptr1_1>ltr7_1+0.5,if(ptr1_1<rtr7_1-0.5,if(ptr2_2>ltr7_2+0.5,if(ptr2_1>ltr7_1+0.5,if(ptr2_1<rtr7_1-0.5,alt11b=0,alt11b=1),alt11b=1),alt11b=1),alt11b=1),alt11b=1),alt11b=1),alt11b=1),alt11b=1),alt11b=1);
+
+          prot=(16+4,9)+rotmat(pi/3)*(p-(16+4,9));
+          ptr1=(16+4,9)+rotmat(2*pi/3)*(prot-(16+4,9));
+          ptr2=(16+4,9)+rotmat(2*pi*2/3)*(prot-(16+4,9));
+          if(prot_2>ltr7_2,if(prot_1<rtr7_1,if(prot_1>ltr7_1,if(ptr1_2>ltr7_2,if(ptr1_1>ltr7_1,if(ptr1_1<rtr7_1,if(ptr2_2>ltr7_2,if(ptr2_1>ltr7_1,if(ptr2_1<rtr7_1,alt11a=0,alt11a=1),alt11a=1),alt11a=1),alt11a=1),alt11a=1),alt11a=1),alt11a=1),alt11a=1),alt11a=1);
+          if(prot_2>ltr7_2+0.5,if(prot_1<rtr7_1-0.5,if(prot_1>ltr7_1+0.5,if(ptr1_2>ltr7_2+0.5,if(ptr1_1>ltr7_1+0.5,if(ptr1_1<rtr7_1-0.5,if(ptr2_2>ltr7_2+0.5,if(ptr2_1>ltr7_1+0.5,if(ptr2_1<rtr7_1-0.5,alt11c=0,alt11c=1),alt11c=1),alt11c=1),alt11c=1),alt11c=1),alt11c=1),alt11c=1),alt11c=1),alt11c=1);
+
+
+          col=(0,0,0,0);
+          if(alt1*alt2*alt3*alt4*alt5*alt8*alt8a*alt9*alt9a*alt10*alt10a*alt11*alt11a==0,
+            col=(0,0,0,1);
+          );
+          if(alt1a*alt2a*alt3a==0,
+            col=(0,0.5,0.5,1);
+          );
+          if(alt8b*alt8c*alt6*alt7==0,
+            col=(0.5,0.7,0,1);
+          );
+          if(alt9b*alt9c*alt6b==0,
+            col=(0.5,0,0.7,1);
+          );
+          if(alt10b*alt10c*alt6c==0,
+            col=(0,0.5,0.7,1);
+          );
+          if(alt11b*alt11c*alt6a==0,
+            col=(0.5,0.5,0.7,1);
+          );
+          col
+        ); //end colorplot
+
+      );//flag==6
+
+
+
+      if(flag==4,
+        imrat1=imsizetext1_1/imsizetext1_2;
+        imrat2=imsizetext2_1/imsizetext2_2;
+        imrat3=imsizetext3_1/imsizetext3_2;
+        imratiotile=imsizetext2_1/imsizetext2_2;
+        if(imrat1<1,
+          imratio1=imrat1*ceil(1/imrat1);
+          often1=ceil(1/imrat1);
+        ,
+          imratio1=imrat1;
+          often1=1;
+        );
+        if(imrat2<1,
+          imratio=imrat2*ceil(1/imrat2);
+          often=ceil(1/imrat2);
+        ,
+          imratio=imrat2;
+          often=1;
+        );
+        if(imrat3<1,
+          imratio3=imrat3*ceil(1/imrat3);
+          often3=ceil(1/imrat3);
+        ,
+          imratio3=imrat3;
+          often3=1;
+        );
+        scvel=imratio*64;
+        createimage("load1", 16*imratio1*64,16*64);
+        createimage("load2", 16*imratio*64,16*64);
+        createimage("load3", 16*imratio3*64,16*64);
+        createimage("load4", 16*imratio3*64,16*64);
+
+        colorplot((0,0),(imratio*64,0),"load2",
+          p=#;
+          col=imagergba((0,0),(imratio/often*64,0),"text2",(mod(p.x,imratio*64),p.y),mipmap->true,repeat->true,interpolate->true);
+          (col_1,col_2,col_3,1)
+        );
+        colorplot((0,0),(imratio1*64,0),"load1",
+          p=#;
+          col=imagergba((0,0),(imratio1/often1*64,0),"text1",(mod(p.x,imratio1*64),p.y),mipmap->true,repeat->true,interpolate->true);
+          (col_1,col_2,col_3,1)
+        );
+        colorplot((0,0),(imratio3*64,0),"load3",
+          p=#;
+          col=imagergba((0,0),(imratio3/often3*64,0),"text3",(mod(p.x,imratio3*64),p.y),mipmap->true,repeat->true,interpolate->true);
+          (col_1,col_2,col_3,1)
+        );
+        colorplot((0,0),(imratio3*64,0),"load4",
+          p=#;
+          col=imagergba((0,0),(imratio3/often3*64,0),"text4",(mod(p.x,imratio3*64),p.y),mipmap->true,repeat->true,interpolate->true);
+          (col_1,col_2,col_3,1)
+        );
+      );//flag==4
+
+      if(flag==3,
+        imratio=0.5;
+        imratiotile=0.5;
+        if(imratio<1,
+          imratio=imratio*ceil(1/imratio);
+        );
+        scvel=imratio*64;
+        createimage("loadm1", 16*imratiotile*64,16*64);
+        createimage("loadp1", 16*imratiotile*64,16*64);
+        createimage("loadm2", 16*imratiotile*64,16*64);
+        createimage("loadp2", 16*imratiotile*64,16*64);
+        createimage("load1", 16*imratiotile*64,16*64);
+        createimage("load2", 16*imratiotile*64,16*64);
+        createimage("load3", 16*imratiotile*64,16*64);
+        createimage("load4", 16*imratiotile*64,16*64);
+        createimage("load5", 16*imratiotile*64,16*64);
+        createimage("load6", 16*imratiotile*64,16*64);
+        createimage("load7", 16*imratiotile*64,16*64);
+        createimage("load8", 16*imratiotile*64,16*64);
+        createimage("load9", 16*imratiotile*64,16*64);
+        createimage("load10", 16*imratiotile*64,16*64);
+        createimage("load11", 16*imratiotile*64,16*64);
+
+
+        ww=3;
+        colorplot((0,0),(imratiotile*64,0),"load1",
+          p=#;
+          col=(0,0,0,0);
+            if(|#.y-1/4*64|<=ww+2,tv1=0,tv1=1);
+            if(|#.y-2/4*64|<=ww+2,tv2=0,tv2=1);
+            if(|#.y-3/4*64|<=ww+2,tv3=0,tv3=1);
+          if(tv1*tv2*tv3==0,
+            col=(0,0,0,1)
+          );
+            if(|#.y-1/4*64|<=ww,tv1=0,tv1=1);
+            if(|#.y-2/4*64|<=ww,tv2=0,tv2=1);
+            if(|#.y-3/4*64|<=ww,tv3=0,tv3=1);
+          if(tv1*tv2*tv3==0,
+            col=(1,0,0,1)
+          );
+          if(p_2>62,col=(0,0,0,1););
+          if(p_2<2,col=(0,0,0,1););
+          col
+        );
+        colorplot((0,0),(imratiotile*64,0),"loadm1",
+          p=#;
+            if(|p_2-1/2*64-((3/4-1/2)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,tv1=0,tv1=1);
+            if(|p_2-2/4*64|<=ww+2,
+              if(mod(p_1,imratiotile*64)>=3/4*imratiotile*64-2,tv2=0,tv2=1);
+              ,tv2=1);
+            if(|p_2-1/2*64-((1/4-1/2)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,tv3=0,tv3=1);
+          if(tv1*tv2*tv3==0,
+            col=(0,0,0,1),
+            col=(0,0,0,0)
+          );
+            if(|p_2-1/2*64-((3/4-1/2)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,tv1=0,tv1=1);
+            if(|p_2-2/4*64|<=ww,
+              if(mod(p_1,imratiotile*64)>=3/4*imratiotile*64,tv2=0,tv2=1);
+              ,tv2=1);
+            if(|p_2-1/2*64-((1/4-1/2)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,tv3=0,tv3=1);
+          if(tv1*tv2*tv3==0,
+            col=(1,0,0,1)
+          );
+          if(|p-(32,32)|<32,if(|p-(32,32)|>30,col=(0,0,0,1)));
+          col
+        );
+        colorplot((0,0),(imratiotile*64,0),"loadm2",
+          p=#;
+            if(|p_2-3/4*64-((1/2-3/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,tv1=0,tv1=1);
+            if(|p_2-2/4*64|<=ww+2,
+              if(mod(p_1,imratiotile*64)<=1/4*imratiotile*64+2,tv2=0,tv2=1);
+              ,tv2=1);
+            if(|p_2-1/4*64-((1/2-1/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,tv3=0,tv3=1);
+
+          col=(0,0,0,0);
+          if(tv1*tv2*tv3==0,
+            col=(0,0,0,1)
+          );
+            if(|p_2-3/4*64-((1/2-3/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,tv1=0,tv1=1);
+            if(|p_2-2/4*64|<=ww,
+              if(mod(p_1,imratiotile*64)<=1/4*imratiotile*64,tv2=0,tv2=1);
+              ,tv2=1);
+            if(|p_2-1/4*64-((1/2-1/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,tv3=0,tv3=1);
+          if(tv1*tv2*tv3==0,
+            col=(1,0,0,1)
+          );
+          if(|p-(0,32)|<32,if(|p-(0,32)|>30,col=(0,0,0,1)));
+          col
+        );
+
+
+        colorplot((0,0),(imratiotile*64,0),"load5",
+          p=#;
+            if(|p_2-1/4*64-((1/2-1/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,tv1=0,tv1=1);
+            if(|p_2-2/4*64-((3/4-2/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,
+              if(|p_2-3/4*64-((1/4-3/4)/imratiotile)*mod(p_1,imratiotile*64)|<=2*ww,tv2=1;,tv2=0);
+              ,tv2=1);
+            if(|p_2-3/4*64-((1/4-3/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,
+            if(|p_2-1/4*64-((1/2-1/4)/imratiotile)*mod(p_1,imratiotile*64)|<=2*ww,tv3=1,tv3=0);
+            ,tv3=1);
+          if(tv1*tv2*tv3==0,
+            col=(0,0,0,1),
+            col=(0,0,0,0)
+          );
+            if(|p_2-1/4*64-((1/2-1/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,tv1=0,tv1=1);
+            if(|p_2-2/4*64-((3/4-2/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,
+              if(|p_2-3/4*64-((1/4-3/4)/imratiotile)*mod(p_1,imratiotile*64)|<=2*ww,tv2=1;,tv2=0);
+              ,tv2=1);
+            if(|p_2-3/4*64-((1/4-3/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,
+            if(|p_2-1/4*64-((1/2-1/4)/imratiotile)*mod(p_1,imratiotile*64)|<=2*ww,tv3=1,tv3=0);
+            ,tv3=1);
+          if(tv1*tv2*tv3==0,
+            col=(1,0,0,1)
+          );
+          if(p_2>62,col=(0,0,0,1););
+          if(p_2<2,col=(0,0,0,1););
+          col
+        );
+
+        colorplot((0,0),(imratiotile*64,0),"load6",
+          p=#;
+          if(|#.y-1/4*64|<=ww+2,tv1=0,tv1=1);
+          if(|p_2-2/4*64-((3/4-2/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,
+            if(|p_2-3/4*64-((2/4-3/4)/imratiotile)*mod(p_1,imratiotile*64)|<=2*ww,tv2=1,tv2=0);
+            ,tv2=1);
+          if(|p_2-3/4*64-((2/4-3/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,tv3=0,tv3=1);
+
+          if(tv1*tv2*tv3==0, //tv4
+            col=(0,0,0,1),
+            col=(0,0,0,0)
+          );
+          if(|#.y-1/4*64|<=ww,tv1=0,tv1=1);
+          if(|p_2-2/4*64-((3/4-2/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,
+            if(|p_2-3/4*64-((2/4-3/4)/imratiotile)*mod(p_1,imratiotile*64)|<=2*ww,tv2=1,tv2=0);
+            ,tv2=1);
+          if(|p_2-3/4*64-((2/4-3/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,tv3=0,tv3=1);
+
+          if(tv1*tv2*tv3==0,
+            col=(1,0,0,1)
+          );
+          if(p_2>62,col=(0,0,0,1););
+          if(p_2<2,col=(0,0,0,1););
+          col
+        );
+
+        colorplot((0,0),(imratiotile*64,0),"load8",
+          p=#;
+          if(|#.y-3/4*64|<=ww+2,tv1=0,tv1=1);
+          if(|p_2-2/4*64-((1/4-2/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,
+            if(|p_2-1/4*64-((2/4-1/4)/imratiotile)*mod(p_1,imratiotile*64)|<=2*ww,tv2=1,tv2=0);
+            ,tv2=1);
+          if(|p_2-1/4*64-((2/4-1/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,tv3=0,tv3=1);
+
+          if(tv1*tv2*tv3==0,
+            col=(0,0,0,1),
+            col=(0,0,0,0)
+          );
+          if(|#.y-3/4*64|<=ww,tv1=0,tv1=1);
+          if(|p_2-2/4*64-((1/4-2/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,
+            if(|p_2-1/4*64-((2/4-1/4)/imratiotile)*mod(p_1,imratiotile*64)|<=2*ww,tv2=1,tv2=0);
+            ,tv2=1);
+          if(|p_2-1/4*64-((2/4-1/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,tv3=0,tv3=1);
+
+          if(tv1*tv2*tv3==0,
+            col=(1,0,0,1)
+          );
+          if(p_2>62,col=(0,0,0,1););
+          if(p_2<2,col=(0,0,0,1););
+          col
+        );
+        colorplot((0,0),(imratiotile*64,0),"load9",
+          p=#;
+          if(|p_2-3/4*64-((1/4-3/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,
+            if(mod(p_1,imratiotile*64)<=1/4*imratiotile*64,tv1=0,if(mod(p_1,imratiotile*64)>=3/4*imratiotile*64,tv1=0,tv1=1););
+            ,tv1=1);
+          if(|p_2-2/4*64-((4/4-2/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,
+            if(mod(p_1,imratiotile*64)<=1/4*imratiotile*64,tv2=0,tv2=1);
+            ,tv2=1);
+          if(|p_2-1/4*64-((3/4-1/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,tv3=0,tv3=1);
+          if(|p_2-0/4*64-((2/4-0/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,
+            if(mod(p_1,imratiotile*64)>=3/4*imratiotile*64,tv4=0,tv4=1);
+            ,tv4=1);
+
+          col=(0,0,0,0);
+
+          if(mod(p_1,imratiotile*64)>=3/4*imratiotile*64-1,if(mod(p_1,imratiotile*64)<=3/4*imratiotile*64+1,
+          if(p_2<28,if(p_2>20,col=(0,0,0,1)))));
+          if(mod(p_1,imratiotile*64)>=1/4*imratiotile*64-1,if(mod(p_1,imratiotile*64)<=1/4*imratiotile*64+1,
+          if(p_2<44,if(p_2>36,col=(0,0,0,1)))));
+
+          if(tv1*tv2*tv3*tv4==0,
+            col=(0,0,0,1)
+          );
+          if(|p_2-3/4*64-((1/4-3/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,
+            if(mod(p_1,imratiotile*64)<=1/4*imratiotile*64,tv1=0,if(mod(p_1,imratiotile*64)>=3/4*imratiotile*64,tv1=0,tv1=1););
+            ,tv1=1);
+          if(|p_2-2/4*64-((4/4-2/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,
+            if(mod(p_1,imratiotile*64)<=1/4*imratiotile*64,tv2=0,tv2=1);
+            ,tv2=1);
+          if(|p_2-1/4*64-((3/4-1/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,tv3=0,tv3=1);
+          if(|p_2-0/4*64-((2/4-0/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,
+            if(mod(p_1,imratiotile*64)>=3/4*imratiotile*64,tv4=0,tv4=1);
+            ,tv4=1);
+
+          if(tv1*tv2*tv3*tv4==0,
+            col=(1,0,0,1)
+          );
+          if(p_2>62,col=(0,0,0,1););
+          if(p_2<2,col=(0,0,0,1););
+          col
+        );
+
+        colorplot((0,0),(imratiotile*64,0),"load11",
+          p=#;
+          if(|p_2-1/4*64-((3/4-1/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,
+            if(mod(p_1,imratiotile*64)<=1/4*imratiotile*64,tv1=0,if(mod(p_1,imratiotile*64)>=3/4*imratiotile*64,tv1=0,tv1=1););
+            ,tv1=1);
+          if(|p_2-2/4*64-((0/4-2/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,
+            if(mod(p_1,imratiotile*64)<=1/4*imratiotile*64,tv2=0,tv2=1);
+            ,tv2=1);
+          if(|p_2-3/4*64-((1/4-3/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,tv3=0,tv3=1);
+          if(|p_2-4/4*64-((2/4-4/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,
+            if(mod(p_1,imratiotile*64)>=3/4*imratiotile*64,tv4=0,tv4=1);
+            ,tv4=1);
+
+          col=(0,0,0,0);
+          if(mod(p_1,imratiotile*64)>=3/4*imratiotile*64-1,if(mod(p_1,imratiotile*64)<=3/4*imratiotile*64+1,
+          if(p_2<44,if(p_2>36,col=(0,0,0,1)))));
+          if(mod(p_1,imratiotile*64)>=1/4*imratiotile*64-1,if(mod(p_1,imratiotile*64)<=1/4*imratiotile*64+1,
+          if(p_2<28,if(p_2>19,col=(0,0,0,1)))));
+          if(tv1*tv2*tv3*tv4==0,
+            col=(0,0,0,1)
+          );
+          if(|p_2-1/4*64-((3/4-1/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,
+            if(mod(p_1,imratiotile*64)<=1/4*imratiotile*64,tv1=0,if(mod(p_1,imratiotile*64)>=3/4*imratiotile*64,tv1=0,tv1=1););
+            ,tv1=1);
+          if(|p_2-2/4*64-((0/4-2/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,
+            if(mod(p_1,imratiotile*64)<=1/4*imratiotile*64,tv2=0,tv2=1);
+            ,tv2=1);
+          if(|p_2-3/4*64-((1/4-3/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,tv3=0,tv3=1);
+          if(|p_2-4/4*64-((2/4-4/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,
+            if(mod(p_1,imratiotile*64)>=3/4*imratiotile*64,tv4=0,tv4=1);
+            ,tv4=1);
+
+          if(tv1*tv2*tv3*tv4==0,
+            col=(1,0,0,1)
+          );
+
+          if(p_2>62,col=(0,0,0,1););
+          if(p_2<2,col=(0,0,0,1););
+          col
+        );
+
+
+
+        colorplot((0,0),(imratiotile*64,0),"load2",
+          p=#;
+          if(|p_2-1/4*64-((1/3-1/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,tv1=0,tv1=1);
+          if(mod(p_1,imratiotile*64)<=imratiotile*64*1/2+1,if(|#.y-2/4*64|<=ww+2,tv2=0,tv2=1);,tv2=1);
+          if(|p_2-3/4*64-((2/3-3/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,tv3=0,tv3=1);
+          col=(0,0,0,0);
+
+          if(tv1*tv2*tv3==0,
+            col=(0,0,0,1)
+          );
+          if(|p_2-1/4*64-((1/3-1/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,tv1=0,tv1=1);
+          if(mod(p_1,imratiotile*64)<=imratiotile*64*1/2,if(|#.y-2/4*64|<=ww,tv2=0,tv2=1);,tv2=1);
+          if(|p_2-3/4*64-((2/3-3/4)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,tv3=0,tv3=1);
+          if(tv1*tv2*tv3==0,
+            col=(1,0,0,1)
+          );
+          if(p_2>62,col=(0,0,0,1););
+          if(p_2<2,col=(0,0,0,1););
+          col
+        );
+
+
+
+        colorplot((0,0),(imratiotile*64,0),"load3",
+          p=#;
+            if(|#.y-1/3*64|<=ww+2,tv1=0,tv1=1);
+            if(|#.y-2/3*64|<=ww+2,tv2=0,tv2=1);
+          col=(0,0,0,0);
+          if(tv1*tv2==0,
+            col=(0,0,0,1)
+          );
+            if(|#.y-1/3*64|<=ww,tv1=0,tv1=1);
+            if(|#.y-2/3*64|<=ww,tv2=0,tv2=1);
+          if(tv1*tv2==0,
+            col=(1,0,0,1)
+          );
+          if(p_2>62,col=(0,0,0,1););
+          if(p_2<2,col=(0,0,0,1););
+          col
+        );
+
+        colorplot((0,0),(imratiotile*64,0),"load7",
+          p=#;
+            if(|p_2-1/3*64-((2/3-1/3)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,tv1=0,tv1=1);
+            if(|p_2-2/3*64-((1/3-2/3)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,
+              if(|p_2-1/3*64-((2/3-1/3)/imratiotile)*mod(p_1,imratiotile*64)|<=2*ww,tv2=1,tv2=0);
+              ,tv2=1);
+          col=(0,0,0,0);
+          if(tv1*tv2==0,
+            col=(0,0,0,1)
+          );
+
+            if(|p_2-1/3*64-((2/3-1/3)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,tv1=0,tv1=1);
+            if(|p_2-2/3*64-((1/3-2/3)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,
+              if(|p_2-1/3*64-((2/3-1/3)/imratiotile)*mod(p_1,imratiotile*64)|<=2*ww,tv2=1,tv2=0);
+              ,tv2=1);
+          if(tv1*tv2==0,
+            col=(1,0,0,1)
+          );
+          if(p_2>62,col=(0,0,0,1););
+          if(p_2<2,col=(0,0,0,1););
+          col
+        );
+
+        colorplot((0,0),(imratiotile*64,0),"load10",
+          p=#;
+          if(|p_2-1/3*64-((5/6-1/3)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,
+            if(mod(p_1,imratiotile*64)<=1/3*imratiotile*64,tv1=0,tv1=1);
+            ,tv1=1);
+          if(|p_2-2/3*64-((1/6-2/3)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,
+            if(mod(p_1,imratiotile*64)<=1/3*imratiotile*64,tv2=0,tv2=1);
+            ,tv2=1);
+          if(|p_2-1/6*64-((2/3-1/6)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,
+            if(mod(p_1,imratiotile*64)>=2/3*imratiotile*64,tv3=0,tv3=1);
+            ,tv3=1);
+          if(|p_2-5/6*64-((1/3-5/6)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,
+            if(mod(p_1,imratiotile*64)>=2/3*imratiotile*64,tv4=0,tv4=1);
+            ,tv4=1);
+          col=(0,0,0,0);
+          if(tv1*tv2*tv3*tv4==0,
+            col=(0,0,0,1)
+          );
+          if(mod(p_1,imratiotile*64)>=2/3*imratiotile*64-1,if(mod(p_1,imratiotile*64)<=2/3*imratiotile*64+1,
+          if(p_2>27,if(p_2<37,col=(0,0,0,1)))));
+          if(mod(p_1,imratiotile*64)>=1/3*imratiotile*64-1,if(mod(p_1,imratiotile*64)<=1/3*imratiotile*64+1,
+          if(p_2>27,if(p_2<37,col=(0,0,0,1)))));
+          if(|p_2-1/3*64-((5/6-1/3)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,
+            if(mod(p_1,imratiotile*64)<=1/3*imratiotile*64,tv1=0,tv1=1);
+            ,tv1=1);
+          if(|p_2-2/3*64-((1/6-2/3)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,
+            if(mod(p_1,imratiotile*64)<=1/3*imratiotile*64,tv2=0,tv2=1);
+            ,tv2=1);
+            if(|p_2-1/6*64-((2/3-1/6)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,
+              if(mod(p_1,imratiotile*64)>=2/3*imratiotile*64,tv3=0,tv3=1);
+              ,tv3=1);
+          if(|p_2-5/6*64-((1/3-5/6)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,
+            if(mod(p_1,imratiotile*64)>=2/3*imratiotile*64,tv4=0,tv4=1);
+            ,tv4=1);
+
+          if(tv1*tv2*tv3*tv4==0,
+            col=(1,0,0,1)
+          );
+          if(p_2>62,col=(0,0,0,1););
+          if(p_2<2,col=(0,0,0,1););
+          col
+        );
+
+        colorplot((0,0),(imratiotile*64,0),"loadp1",
+          p=#;
+          if(|p_2-1/2*64-((2/3-1/2)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,tv1=0,tv1=1);
+          if(|p_2-1/2*64-((1/3-1/2)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,tv2=0,tv2=1);
+          if(tv1*tv2==0, //tv3
+            col=(0,0,0,1),
+            col=(0,0,0,0)
+          );
+          if(|p_2-1/2*64-((2/3-1/2)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,tv1=0,tv1=1);
+          if(|p_2-1/2*64-((1/3-1/2)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,tv2=0,tv2=1);
+          if(tv1*tv2==0,//tv3
+            col=(1,0,0,1)
+          );
+          if(|p-(32,32)|<32,if(|p-(32,32)|>30,col=(0,0,0,1)));
+
+          col
+        );
+
+        colorplot((0,0),(imratiotile*64,0),"loadp2",
+          p=#;
+          if(|p_2-2/3*64-((1/2-2/3)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,tv1=0,tv1=1);
+          if(|p_2-1/3*64-((1/2-1/3)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,tv2=0,tv2=1);
+          col=(0,0,0,0);
+          if(tv1*tv2==0, //tv3
+            col=(0,0,0,1)
+          );
+          if(|p_2-2/3*64-((1/2-2/3)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,tv1=0,tv1=1);
+          if(|p_2-1/3*64-((1/2-1/3)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,tv2=0,tv2=1);
+          if(tv1*tv2==0,//tv3
+            col=(1,0,0,1)
+          );
+          if(|p-(0,32)|<32,if(|p-(0,32)|>30,col=(0,0,0,1)));
+
+          col
+        );
+
+        colorplot((0,0),(imratiotile*64,0),"load4",
+          p=#;
+          if(|p_2-1/3*64-((1/4-1/3)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,tv1=0,tv1=1);
+          if(mod(p_1,imratiotile*64)>=imratiotile*64*1/2-1.5,if(|#.y-2/4*64|<=ww+2,tv2=0,tv2=1);,tv2=1);
+          if(|p_2-2/3*64-((3/4-2/3)/imratiotile)*mod(p_1,imratiotile*64)|<=ww+2,tv3=0,tv3=1);
+          if(tv1*tv2*tv3==0,
+            col=(0,0,0,1),
+            col=(0,0,0,0)
+          );
+          if(|p_2-1/3*64-((1/4-1/3)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,tv1=0,tv1=1);
+          if(mod(p_1,imratiotile*64)>=imratiotile*64*1/2,if(|#.y-2/4*64|<=ww,tv2=0,tv2=1);,tv2=1);
+          if(|p_2-2/3*64-((3/4-2/3)/imratiotile)*mod(p_1,imratiotile*64)|<=ww,tv3=0,tv3=1);
+          if(tv1*tv2*tv3==0,
+            col=(1,0,0,1)
+          );
+          if(p_2>62,col=(0,0,0,1););
+          if(p_2<2,col=(0,0,0,1););
+          col
+        );
+      );//flag==3
+
+    if(flag==1,
+      imrat=imsizefloral_1/imsizefloral_2;
+      imratiotile=imsizefloral_1/imsizefloral_2;
+      if(imrat<1,
+        imratio=imrat*ceil(1/imrat);
+        often=ceil(1/imrat);
+      ,
+        imratio=imrat;
+        often=1;
+      );
+      scvel=imratio*64;
+      createimage("load1", imratio*64,64);
+      createimage("load2", imratio*64,64);
+      createimage("load3", imratio*64,64);
+      createimage("load4", imratio*64,64);
+
+      colorplot((0,0),(imratio*64,0),"load1",
+        p=#;
+        col=imagergba((0,0),(imratio/often*64,0),"floral1",(mod(p.x,imratio*64),p.y),mipmap->true,repeat->true);
+        (col_1,col_2,col_3,1)
+      );
+      colorplot((0,0),(imratio*64,0),"load2",
+        p=#;
+        col=imagergba((0,0),(imratio/often*64,0),"floral2",(mod(p.x,imratio*64),p.y),mipmap->true,repeat->true);
+        (col_1,col_2,col_3,1)
+      );
+      colorplot((0,0),(imratio*64,0),"load3",
+        p=#;
+        col=imagergba((0,0),(imratio/often*64,0),"floral3",(mod(p.x,imratio*64),p.y),mipmap->true,repeat->true);
+        (col_1,col_2,col_3,1)
+      );
+      colorplot((0,0),(imratio*64,0),"load4",
+        p=#;
+        col=imagergba((0,0),(imratio/often*64,0),"floral4",(mod(p.x,imratio*64),p.y),mipmap->true,repeat->true);
+        (col_1,col_2,col_3,1)
+      );
+    );//flag==1
+
+
+    );//end if loadvar
+
+
+    repeat(1024,
+      draw((#,0),color->green(0),border->false,size->1);
+    );
+    repeat(1024,
+      draw((#,512),color->red(0),border->false,size->1);
+    );
+    repeat(512,
+      draw((0,#),color->blue(0),border->false,size->1);
+    );
+    repeat(512,
+      draw((1024,#),color->gray(0),border->false,size->1);
+    );
+    repeat(512,
+      draw((1224,#),color->red(1),border->false,size->1);
+    );
+    repeat(200,
+      draw((1024+#,0),color->red(1),border->false,size->1);
+    );
+    repeat(200,
+      draw((1024+#,512),color->red(1),border->false,size->1);
+    );
+
+    drawtext((1054,450),"var: circles",size->15);
+    drawtext((1054,400),"var: stripes",size->15);
+    drawtext((1054,350),"len: circles",size->15);
+    drawtext((1054,300),"len: text",size->15);
+    drawtext((1054,250),"rand: knot",size->15);
+    drawtext((1054,200),"var: floral",size->15);
+    drawtext((1054,100),"no conf.-test",size->15);
+    drawtext((1054,50),"conf.-test",size->15);
+
+    if(C.y<225, C.xy=(1074,205); if(flag==1,loadvar=1,loadvar=0); flag=1;);
+    if(and(C.y>=225,C.y<275), C.xy=(1074,255); if(flag==3,loadvar=1,loadvar=0); flag=3;);
+    if(and(C.y>=275,C.y<325), C.xy=(1074,305); if(flag==4,loadvar=1,loadvar=0); flag=4;);
+    if(and(C.y>=325,C.y<375), C.xy=(1074,355); if(flag==5,loadvar=1,loadvar=0); flag=5;);
+    if(and(C.y>=375,C.y<425), C.xy=(1074,405); if(flag==6,loadvar=1,loadvar=0); flag=6;);
+    if(C.y>=425, C.xy=(1074,455); if(flag==7,loadvar=1,loadvar=0); flag=7;);
+
+    if(D.y>75, D.xy=(1074,105); flago=0;);
+    if(D.y<75, D.xy=(1074,55); flago=1;);
+
+
+    if(doorna,
+
+      if(or(flag==7,flag==5),
+        drawimage((0,0),(1*imratiotile*64,0),"load1");
+        drawimage((1*imratiotile*64,0),(2*imratiotile*64,0),"load2");
+        drawimage((2*imratiotile*64,0),(3*imratiotile*64,0),"load3");
+        drawimage((3*imratiotile*64,0),(4*imratiotile*64,0),"load4");
+      );//flag==7, //flag==5
+
+      if(flag==6,
+        drawimage((0,0),(1*imratiotile*64,0),"load1");
+        drawimage((1*imratiotile*64,0),(2*imratiotile*64,0),"load1");
+      );//flag==6
+
+      if(flag==4,
+        drawimage((0,0),(1*imratio1*64,0),"load1");
+        drawimage((imratio1*64,0),(imratio1*64+imratio*64,0),"load2");
+        drawimage((imratio1*64+imratio*64,0),(imratio3*64+imratio1*64+imratio*64,0),"load3");
+        drawimage((imratio3*64+imratio1*64+imratio*64,0),(2*imratio3*64+imratio1*64+imratio*64,0),"load4");
+      );//flag==4
+
+      if(flag==3,
+        drawimage((0,0),(1*imratiotile*64,0),"loadm1");
+        drawimage((1*imratiotile*64,0),(2*imratiotile*64,0),"load1");
+        drawimage((2*imratiotile*64,0),(3*imratiotile*64,0),"load5");
+        drawimage((3*imratiotile*64,0),(4*imratiotile*64,0),"load6");
+        drawimage((4*imratiotile*64,0),(5*imratiotile*64,0),"load8");
+        drawimage((5*imratiotile*64,0),(6*imratiotile*64,0),"load2");
+        drawimage((6*imratiotile*64,0),(7*imratiotile*64,0),"load3");
+        drawimage((7*imratiotile*64,0),(8*imratiotile*64,0),"load7");
+        drawimage((8*imratiotile*64,0),(9*imratiotile*64,0),"load10");
+        drawimage((9*imratiotile*64,0),(10*imratiotile*64,0),"load4");
+        drawimage((10*imratiotile*64,0),(11*imratiotile*64,0),"load9");
+        drawimage((11*imratiotile*64,0),(12*imratiotile*64,0),"load11");
+        drawimage((12*imratiotile*64,0),(13*imratiotile*64,0),"loadp1");
+        drawimage((13*imratiotile*64,0),(14*imratiotile*64,0),"loadp2");
+        drawimage((14*imratiotile*64,0),(15*imratiotile*64,0),"loadm2");
+      );//flag==3
+
+
+      if(flag==1,
+        drawimage((0,0),(1*imratiotile*64,0),"load1");
+        drawimage((1*imratiotile*64,0),(2*imratiotile*64,0),"load2");
+        drawimage((2*imratiotile*64,0),(3*imratiotile*64,0),"load3");
+        drawimage((3*imratiotile*64,0),(4*imratiotile*64,0),"load4");
+      );//flag==1
+
+    );//end if doorna
+
+
+
+    if(doorna,
+      if(drag==true,
+        repeat(50,
+
+          colorplot((0,0),(1024,0),"ptcanvas",
+            p=#;
+            col=imagergba((0,0),(1024,0),"mpcanvas",p,interpolate->false);
+            if(col_4>0 ,
+              colorval=averpos(p,0);
+            ,
+              colorval=(0,0,0,0);
+            );
+            colorval
+          );//end colorplot
+
+          if(changecanvas==1,
+            colorplot((0,0),(1024,0),"ptcanvas2",
+              p=#;
+              col=imagergba((0,0),(1024,0),"mpcanvas2",p,interpolate->false);
+              if(col_4>0 ,
+                colorval=averpos(p,1);
+              ,
+                colorval=(0,0,0,0);
+              );
+              colorval
+            );//end colorplot
+
+          );//end if changecanvas
+
+        );//end repeat
+        amountold=100;
+        dochangeamount=true;
+      ); //end if drag
+
+      if(drag==false,
+        if(dochangeamount==1,repnum=100,repnum=70);
+        rr=min(max(seconds()*repnum,50),3*repnum);
+        if(dochangeamount,
+          colorplot((0,0),(1024,0), "countcanvas",
+            p=#;
+            ref=expmp(imagergba((0,0),(1024,0),"mpcanvas",p,interpolate->true),scvel,base);
+
+            if(ref_4>0,
+              erg=conftestdevi(p,ref,0);
+              colorval=erg;
+            ,
+              colorval=(0,0,0,0);
+            );
+            colorval
+          );//end if colorplot
+          if(changecanvas==1,
+            colorplot((0,0),(1024,0), "countcanvas2",
+              p=#;
+              ref=expmp(imagergba((0,0),(1024,0),"mpcanvas2",p,interpolate->true),scvel,base);
+              if(ref_4>0,
+                erg=conftestdevi(p,ref,1);
+                colorval=erg;
+              ,
+                colorval=(0,0,0,0);
+              );
+              colorval
+            );//end if colorplot
+          );//end if changecanvas
+
+          repeat(9,n,
+            nn=2^(n-1);
+            colorplot((0,0),(1024,0), "countcanvas",
+              i=floor(#.x);
+              j=floor(#.y);
+              sum =  imagergba((0,0),(1024,0), "countcanvas", (i,j),       interpolate->false)
+                    +imagergba((0,0),(1024,0), "countcanvas", (i+nn,j),    interpolate->false)
+                    +imagergba((0,0),(1024,0), "countcanvas", (i,j+nn),    interpolate->false)
+                    +imagergba((0,0),(1024,0), "countcanvas", (i+nn,j+nn), interpolate->false);
+
+              sum
+            ); //end colorplot
+            if(changecanvas==1,
+              colorplot((0,0),(1024,0), "countcanvas2",
+                i=floor(#.x);
+                j=floor(#.y);
+                sum =  imagergba((0,0),(1024,0), "countcanvas2", (i,j),       interpolate->false)
+                      +imagergba((0,0),(1024,0), "countcanvas2", (i+nn,j),    interpolate->false)
+                      +imagergba((0,0),(1024,0), "countcanvas2", (i,j+nn),    interpolate->false)
+                      +imagergba((0,0),(1024,0), "countcanvas2", (i+nn,j+nn), interpolate->false);
+
+                sum
+              ); //end colorplot
+            );//end if changecanvas
+          );//end repeat 9
+          amountvec = imagergba((0,0),(1024,0), "countcanvas", (0.5,0.5), interpolate->false) //1/2
+                      + imagergba((0,0),(1024,0), "countcanvas", (512.5,0.5), interpolate->false);
+          if(changecanvas==1,
+            fh=imagergba((0,0),(1024,0), "countcanvas", (0.5,0.5), interpolate->false)
+                + imagergba((0,0),(1024,0), "countcanvas", (512.5,0.5), interpolate->false);
+            sh=imagergba((0,0),(1024,0), "countcanvas2", (0.5,0.5), interpolate->false)
+                + imagergba((0,0),(1024,0), "countcanvas2", (512.5,0.5), interpolate->false);
+            amountvec = 1/2*(fh+sh);
+
+          );//end if changecanvas
+
+          amountnew=(1/amountvec_4)*amountvec_1;
+
+          if(changecanvas==1, numsec=7,numsec=5);
+          if(and(|amountnew|<=|amountold|,seconds()<numsec),
+
+            repeat(rr,
+
+              colorplot((0,0),(1024,0),"ptcanvas",
+                p=#;
+                col=imagergba((0,0),(1024,0),"mpcanvas",p,interpolate->false);
+                if(col_4>0,
+                  colorval=averpos(p,0);
+                ,
+                  colorval=(0,0,0,0);
+                );
+                colorval
+              );//end colorplot
+
+            if(changecanvas==1,
+              colorplot((0,0),(1024,0),"ptcanvas2",
+                p=#;
+                col=imagergba((0,0),(1024,0),"mpcanvas2",p,interpolate->false);
+                if(col_4>0,
+                  colorval=averpos(p,1);
+                ,
+                  colorval=(0,0,0,0);
+                );
+                colorval
+              );//end colorplot
+            );//end if changecanvas
+
+            ); //end repeat
+
+            amountold=amountnew;
+          ,
+            amountold=300;
+            dochangeamount=false;
+          );//end if amount
+        ,
+          if(amountold==300,
+            if(seconds()>=numsec,
+              drawtext((500,10),"average error after "+numsec+" seconds: "+(amountnew));
+            ,
+              resetclock();
+              drawtext((500,10),"average error: "+(amountnew));
+            );
+          );
+
+        ); //end if dochangeamount
+
+      ); //end if drag==false
+
+      colorplot((0,0),(1024,0),"aktcanvas",
+        p=#;
+        col=expvel(imagergba((0,0),(1024,0),"ptcanvas",#,interpolate->false),scvel,base);
+        ref=expmp(imagergba((0,0),(1024,0),"mpcanvas",#,interpolate->false),scvel,base);
+
+        if(ref_4>0,
+
+          if(flag==7,
+            tilev=imagergba((0,0),(1024,0),"tilecanvas",#,interpolate->false);
+            tilenum=round(tilev_1);
+
+            if(col_1>=imratiotile*32,
+              tilenum=tilenum+1;
+              col1=col_1-imratiotile*32;
+            ,col1=col_1);
+            if(col_1<=0,
+              tilenum=tilenum-1;
+              col1=col_1+imratiotile*32;
+            );
+
+            canvasv=imagergba((0,0),(1024,0),"listcanvas",(tilenum,1),interpolate->false);
+            canvasnum=floor(canvasv_1);
+
+            if(abs(canvasnum-1)<=0.1,
+              colorval=imagergba((0,0),(imratiotile*32,0),"load1",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+              );
+            if(abs(canvasnum-2)<=0.1,
+                colorval=imagergba((0,0),(imratiotile*32,0),"load2",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+            );
+            if(abs(canvasnum-3)<=0.1,
+                colorval=imagergba((0,0),(imratiotile*32,0),"load3",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+            );
+            if(abs(canvasnum-4)<=0.1,
+                colorval=imagergba((0,0),(imratiotile*32,0),"load4",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+            );
+          );//flag==7
+
+
+          if(flag==6,
+            tpt=imagergba((0,0),(1024,0),"tilecanvas",#, interpolate->false);
+            tilenum=floor(tpt_1);
+            cooradd=(tilenum-1)*imratiotile*32;
+            pa1=cooradd+col_1;
+            pa2=col_2;
+            pcomp=(pa1,pa2);
+
+            if(pcomp_2>28,alt1=0,alt1=1);if(pcomp_2>28.5,if(pcomp_2<31.5,alt1a=0,alt1a=1),alt1a=1);
+            if(pcomp_2<4,alt2=0,alt2=1);if(pcomp_2>0.5,if(pcomp_2<3.5,alt2a=0,alt2a=1),alt2a=1);
+            if(pcomp_2<18,if(pcomp_2>14,alt3=0,alt3=1),alt3=1);if(pcomp_2>14.5,if(pcomp_2<17.5,alt3a=0,alt3a=1),alt3a=1);
+
+            if(pcomp_2>18,if(pcomp_2<28,if(|(mod(pcomp_1,8),pcomp_2)-(0,23)|<4,alt4=0,alt4=1),alt4=1),alt4=1);
+            if(pcomp_2>18,if(pcomp_2<28,if(|(mod(pcomp_1,8),pcomp_2)-(8,23)|<4,alt5=0,alt5=1),alt5=1),alt5=1);
+
+            if(pcomp_2>18,if(pcomp_2<28,if(|(pcomp_1,pcomp_2)-(cooradd+0,23)|<3.5,alt6=0,alt6=1),alt6=1),alt6=1);
+            if(pcomp_2>18,if(pcomp_2<28,if(|(pcomp_1,pcomp_2)-(cooradd+32,23)|<3.5,alt7=0,alt7=1),alt7=1),alt7=1);
+            if(pcomp_2>18,if(pcomp_2<28,if(|(pcomp_1,pcomp_2)-(cooradd+8,23)|<3.5,alt6a=0,alt6a=1),alt6a=1),alt6a=1);
+            if(pcomp_2>18,if(pcomp_2<28,if(|(pcomp_1,pcomp_2)-(cooradd+16,23)|<3.5,alt6b=0,alt6b=1),alt6b=1),alt6b=1);
+            if(pcomp_2>18,if(pcomp_2<28,if(|(pcomp_1,pcomp_2)-(cooradd+24,23)|<3.5,alt6c=0,alt6c=1),alt6c=1),alt6c=1);
+
+
+            otr6=(8+4,9)+rotmat(pi/4)*((11+4,12)-(8+4,9));
+            ltr6=(8+4,9)+rotmat(2*pi/3)*(otr6-(8+4,9));
+            rtr6=(8+4,9)+rotmat(2*pi*2/3)*(otr6-(8+4,9));
+            ptr1=(8+4,9)+rotmat(2*pi/3)*(pcomp-(cooradd+8+4,9));
+            ptr2=(8+4,9)+rotmat(2*pi*2/3)*(pcomp-(cooradd+8+4,9));
+            if(pcomp_2>ltr6_2,if(pcomp_1<cooradd+rtr6_1,if(pcomp_1>cooradd+ltr6_1,if(ptr1_2>ltr6_2,if(ptr1_1>ltr6_1,if(ptr1_1<rtr6_1,if(ptr2_2>ltr6_2,if(ptr2_1>ltr6_1,if(ptr2_1<rtr6_1,alt8=0,alt8=1),alt8=1),alt8=1),alt8=1),alt8=1),alt8=1),alt8=1),alt8=1),alt8=1);
+            if(pcomp_2>ltr6_2+0.5,if(pcomp_1<cooradd+rtr6_1-0.5,if(pcomp_1>cooradd+ltr6_1+0.5,if(ptr1_2>ltr6_2+0.5,if(ptr1_1>ltr6_1+0.5,if(ptr1_1<rtr6_1-0.5,if(ptr2_2>ltr6_2+0.5,if(ptr2_1>ltr6_1+0.5,if(ptr2_1<rtr6_1-0.5,alt8b=0,alt8b=1),alt8b=1),alt8b=1),alt8b=1),alt8b=1),alt8b=1),alt8b=1),alt8b=1),alt8b=1);
+
+            prot=(8+4,9)+rotmat(pi/3)*(pcomp-(cooradd+8+4,9));
+            ptr1=(8+4,9)+rotmat(2*pi/3)*(prot-(8+4,9));
+            ptr2=(8+4,9)+rotmat(2*pi*2/3)*(prot-(8+4,9));
+            if(prot_2>ltr6_2,if(prot_1<rtr6_1,if(prot_1>ltr6_1,if(ptr1_2>ltr6_2,if(ptr1_1>ltr6_1,if(ptr1_1<rtr6_1,if(ptr2_2>ltr6_2,if(ptr2_1>ltr6_1,if(ptr2_1<rtr6_1,alt8a=0,alt8a=1),alt8a=1),alt8a=1),alt8a=1),alt8a=1),alt8a=1),alt8a=1),alt8a=1),alt8a=1);
+            if(prot_2>ltr6_2+0.5,if(prot_1<rtr6_1-0.5,if(prot_1>ltr6_1+0.5,if(ptr1_2>ltr6_2+0.5,if(ptr1_1>ltr6_1+0.5,if(ptr1_1<rtr6_1-0.5,if(ptr2_2>ltr6_2+0.5,if(ptr2_1>ltr6_1+0.5,if(ptr2_1<rtr6_1-0.5,alt8c=0,alt8c=1),alt8c=1),alt8c=1),alt8c=1),alt8c=1),alt8c=1),alt8c=1),alt8c=1),alt8c=1);
+
+            otr7=(24+4,9)+rotmat(pi/4)*((27+4,12)-(24+4,9));
+            ltr7=(24+4,9)+rotmat(2*pi/3)*(otr7-(24+4,9));
+            rtr7=(24+4,9)+rotmat(2*pi*2/3)*(otr7-(24+4,9));
+            ptr1=(24+4,9)+rotmat(2*pi/3)*(pcomp-(cooradd+24+4,9));
+            ptr2=(24+4,9)+rotmat(2*pi*2/3)*(pcomp-(cooradd+24+4,9));
+            if(pcomp_2>ltr7_2,if(pcomp_1<cooradd+rtr7_1,if(pcomp_1>cooradd+ltr7_1,if(ptr1_2>ltr7_2,if(ptr1_1>ltr7_1,if(ptr1_1<rtr7_1,if(ptr2_2>ltr7_2,if(ptr2_1>ltr7_1,if(ptr2_1<rtr7_1,alt9=0,alt9=1),alt9=1),alt9=1),alt9=1),alt9=1),alt9=1),alt9=1),alt9=1),alt9=1);
+            if(pcomp_2>ltr7_2+0.5,if(pcomp_1<cooradd+rtr7_1-0.5,if(pcomp_1>cooradd+ltr7_1+0.5,if(ptr1_2>ltr7_2+0.5,if(ptr1_1>ltr7_1+0.5,if(ptr1_1<rtr7_1-0.5,if(ptr2_2>ltr7_2+0.5,if(ptr2_1>ltr7_1+0.5,if(ptr2_1<rtr7_1-0.5,alt9b=0,alt9b=1),alt9b=1),alt9b=1),alt9b=1),alt9b=1),alt9b=1),alt9b=1),alt9b=1),alt9b=1);
+
+            prot=(24+4,9)+rotmat(pi/3)*(pcomp-(cooradd+24+4,9));
+            ptr1=(24+4,9)+rotmat(2*pi/3)*(prot-(24+4,9));
+            ptr2=(24+4,9)+rotmat(2*pi*2/3)*(prot-(24+4,9));
+            if(prot_2>ltr7_2,if(prot_1<rtr7_1,if(prot_1>ltr7_1,if(ptr1_2>ltr7_2,if(ptr1_1>ltr7_1,if(ptr1_1<rtr7_1,if(ptr2_2>ltr7_2,if(ptr2_1>ltr7_1,if(ptr2_1<rtr7_1,alt9a=0,alt9a=1),alt9a=1),alt9a=1),alt9a=1),alt9a=1),alt9a=1),alt9a=1),alt9a=1),alt9a=1);
+            if(prot_2>ltr7_2+0.5,if(prot_1<rtr7_1-0.5,if(prot_1>ltr7_1+0.5,if(ptr1_2>ltr7_2+0.5,if(ptr1_1>ltr7_1+0.5,if(ptr1_1<rtr7_1-0.5,if(ptr2_2>ltr7_2+0.5,if(ptr2_1>ltr7_1+0.5,if(ptr2_1<rtr7_1-0.5,alt9c=0,alt9c=1),alt9c=1),alt9c=1),alt9c=1),alt9c=1),alt9c=1),alt9c=1),alt9c=1),alt9c=1);
+
+            otr6=(0+4,9)+rotmat(pi/4)*((3+4,12)-(0+4,9));
+            ltr6=(0+4,9)+rotmat(2*pi/3)*(otr6-(0+4,9));
+            rtr6=(0+4,9)+rotmat(2*pi*2/3)*(otr6-(0+4,9));
+            ptr1=(0+4,9)+rotmat(2*pi/3)*(pcomp-(cooradd+0+4,9));
+            ptr2=(0+4,9)+rotmat(2*pi*2/3)*(pcomp-(cooradd+0+4,9));
+            if(pcomp_2>ltr6_2,if(pcomp_1<cooradd+rtr6_1,if(pcomp_1>cooradd+ltr6_1,if(ptr1_2>ltr6_2,if(ptr1_1>ltr6_1,if(ptr1_1<rtr6_1,if(ptr2_2>ltr6_2,if(ptr2_1>ltr6_1,if(ptr2_1<rtr6_1,alt10=0,alt10=1),alt10=1),alt10=1),alt10=1),alt10=1),alt10=1),alt10=1),alt10=1),alt10=1);
+            if(pcomp_2>ltr6_2+0.5,if(pcomp_1<cooradd+rtr6_1-0.5,if(pcomp_1>cooradd+ltr6_1+0.5,if(ptr1_2>ltr6_2+0.5,if(ptr1_1>ltr6_1+0.5,if(ptr1_1<rtr6_1-0.5,if(ptr2_2>ltr6_2+0.5,if(ptr2_1>ltr6_1+0.5,if(ptr2_1<rtr6_1-0.5,alt10b=0,alt10b=1),alt10b=1),alt10b=1),alt10b=1),alt10b=1),alt10b=1),alt10b=1),alt10b=1),alt10b=1);
+
+            prot=(0+4,9)+rotmat(pi/3)*(pcomp-(cooradd+0+4,9));
+            ptr1=(0+4,9)+rotmat(2*pi/3)*(prot-(0+4,9));
+            ptr2=(0+4,9)+rotmat(2*pi*2/3)*(prot-(0+4,9));
+            if(prot_2>ltr6_2,if(prot_1<rtr6_1,if(prot_1>ltr6_1,if(ptr1_2>ltr6_2,if(ptr1_1>ltr6_1,if(ptr1_1<rtr6_1,if(ptr2_2>ltr6_2,if(ptr2_1>ltr6_1,if(ptr2_1<rtr6_1,alt10a=0,alt10a=1),alt10a=1),alt10a=1),alt10a=1),alt10a=1),alt10a=1),alt10a=1),alt10a=1),alt10a=1);
+            if(prot_2>ltr6_2+0.5,if(prot_1<rtr6_1-0.5,if(prot_1>ltr6_1+0.5,if(ptr1_2>ltr6_2+0.5,if(ptr1_1>ltr6_1+0.5,if(ptr1_1<rtr6_1-0.5,if(ptr2_2>ltr6_2+0.5,if(ptr2_1>ltr6_1+0.5,if(ptr2_1<rtr6_1-0.5,alt10c=0,alt10c=1),alt10c=1),alt10c=1),alt10c=1),alt10c=1),alt10c=1),alt10c=1),alt10c=1),alt10c=1);
+
+            otr7=(16+4,9)+rotmat(pi/4)*((19+4,12)-(16+4,9));
+            ltr7=(16+4,9)+rotmat(2*pi/3)*(otr7-(16+4,9));
+            rtr7=(16+4,9)+rotmat(2*pi*2/3)*(otr7-(16+4,9));
+            ptr1=(16+4,9)+rotmat(2*pi/3)*(pcomp-(cooradd+16+4,9));
+            ptr2=(16+4,9)+rotmat(2*pi*2/3)*(pcomp-(cooradd+16+4,9));
+            if(pcomp_2>ltr7_2,if(pcomp_1<cooradd+rtr7_1,if(pcomp_1>cooradd+ltr7_1,if(ptr1_2>ltr7_2,if(ptr1_1>ltr7_1,if(ptr1_1<rtr7_1,if(ptr2_2>ltr7_2,if(ptr2_1>ltr7_1,if(ptr2_1<rtr7_1,alt11=0,alt11=1),alt11=1),alt11=1),alt11=1),alt11=1),alt11=1),alt11=1),alt11=1),alt11=1);
+            if(pcomp_2>ltr7_2+0.5,if(pcomp_1<cooradd+rtr7_1-0.5,if(pcomp_1>cooradd+ltr7_1+0.5,if(ptr1_2>ltr7_2+0.5,if(ptr1_1>ltr7_1+0.5,if(ptr1_1<rtr7_1-0.5,if(ptr2_2>ltr7_2+0.5,if(ptr2_1>ltr7_1+0.5,if(ptr2_1<rtr7_1-0.5,alt11b=0,alt11b=1),alt11b=1),alt11b=1),alt11b=1),alt11b=1),alt11b=1),alt11b=1),alt11b=1),alt11b=1);
+
+            prot=(16+4,9)+rotmat(pi/3)*(pcomp-(cooradd+16+4,9));
+            ptr1=(16+4,9)+rotmat(2*pi/3)*(prot-(16+4,9));
+            ptr2=(16+4,9)+rotmat(2*pi*2/3)*(prot-(16+4,9));
+            if(prot_2>ltr7_2,if(prot_1<rtr7_1,if(prot_1>ltr7_1,if(ptr1_2>ltr7_2,if(ptr1_1>ltr7_1,if(ptr1_1<rtr7_1,if(ptr2_2>ltr7_2,if(ptr2_1>ltr7_1,if(ptr2_1<rtr7_1,alt11a=0,alt11a=1),alt11a=1),alt11a=1),alt11a=1),alt11a=1),alt11a=1),alt11a=1),alt11a=1),alt11a=1);
+            if(prot_2>ltr7_2+0.5,if(prot_1<rtr7_1-0.5,if(prot_1>ltr7_1+0.5,if(ptr1_2>ltr7_2+0.5,if(ptr1_1>ltr7_1+0.5,if(ptr1_1<rtr7_1-0.5,if(ptr2_2>ltr7_2+0.5,if(ptr2_1>ltr7_1+0.5,if(ptr2_1<rtr7_1-0.5,alt11c=0,alt11c=1),alt11c=1),alt11c=1),alt11c=1),alt11c=1),alt11c=1),alt11c=1),alt11c=1),alt11c=1);
+
+
+            colorval=(0,0,0,0);
+            if(alt1*alt2*alt3*alt4*alt5*alt8*alt8a*alt9*alt9a*alt10*alt10a*alt11*alt11a==0,
+              colorval=(0,0,0,1);
+            );
+            if(alt1a*alt2a*alt3a==0,
+              colorval=(0,0.5,0.5,1);
+            );
+            if(alt8b*alt8c*alt6*alt7==0,
+              colorval=(0.5,0.7,0,1);
+            );
+            if(alt9b*alt9c*alt6b==0,
+              colorval=(0.5,0,0.7,1);
+            );
+            if(alt10b*alt10c*alt6c==0,
+              colorval=(0,0.5,0.7,1);
+            );
+            if(alt11b*alt11c*alt6a==0,
+              colorval=(0.5,0.5,0.7,1);
+            );
+          );//flag==6
+
+
+          if(flag==5,
+
+            tilev=imagergba((0,0),(1024,0),"tilecanvas",#,interpolate->false);
+            tilenum=round(tilev_1);
+
+            if(col_1>=imratiotile*32,
+              tilenum=tilenum+1;
+              col1=col_1-imratiotile*32;
+            ,col1=col_1);
+            if(col_1<=0,
+              tilenum=tilenum-1;
+              col1=col_1+imratiotile*32;
+            );
+
+            canvasv=imagergba((0,0),(1024,0),"listcanvas",(tilenum,1),interpolate->false);
+            canvasnum=floor(canvasv_1);
+            if(abs(canvasnum-4)<=0.1,
+              colorval=imagergba((0,0),(imratiotile*32,0),"load1",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+              if(wholetile>4,
+              if(tilenum>2,
+              if(tilenum<wholetile-2,
+                colorval=imagergba((0,0),(imratiotile*32,0),"load2",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+              )));
+              if(wholetile>8,
+              if(tilenum>4,
+              if(tilenum<wholetile-4,
+                colorval=imagergba((0,0),(imratiotile*32,0),"load3",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+              )));
+              if(wholetile>12,
+              if(tilenum>6,
+              if(tilenum<wholetile-6,
+                colorval=imagergba((0,0),(imratiotile*32,0),"load4",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+              )));
+            );
+            if(abs(canvasnum-3)<=0.1,
+                colorval=imagergba((0,0),(imratiotile*32,0),"load1",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+                if(wholetile>4,
+                if(tilenum>2,
+                if(tilenum<wholetile-2,
+                  colorval=imagergba((0,0),(imratiotile*32,0),"load2",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+                )));
+                if(wholetile>8,
+                if(tilenum>4,
+                if(tilenum<wholetile-4,
+                  colorval=imagergba((0,0),(imratiotile*32,0),"load3",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+                )));
+            );
+            if(abs(canvasnum-2)<=0.1,
+                colorval=imagergba((0,0),(imratiotile*32,0),"load1",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+                if(wholetile>4,
+                if(tilenum>2,
+                if(tilenum<wholetile-2,
+                  colorval=imagergba((0,0),(imratiotile*32,0),"load2",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+                )));
+            );
+            if(abs(canvasnum-1)<=0.1,
+                colorval=imagergba((0,0),(imratiotile*32,0),"load1",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+            );
+
+            colorval
+          );//flag==5
+
+          if(flag==4,
+            tpt=imagergba((0,0),(1024,0),"tilecanvas",#, interpolate->false);
+            tilenum=floor(tpt_1);
+            cooradd=(tilenum-1)*imratiotile*32;
+            pa1=cooradd+col_1;
+            pa2=col_2;
+            pcomp=(pa1,pa2);
+            if(col_1>=imratiotile*32,cooradd=(tilenum)*imratiotile*32; );
+            if(col_1<=0, cooradd=(tilenum-2)*imratiotile*32 );
+            pp=(pa1,pa2);
+            colorval=(0,0,0,0);
+            if(xold+32<imratio1*32,
+              colorval=imagergba((0,0),(imratio1*32,0),"load1",(pa1,pa2),interpolate->true);//lu,ru
+            );//end if xold
+            if(xold+32<imratiotile*32,
+              if(xold+32>imratio1*32,
+                anteil=imratiotile*32-xold-32;
+                hanteil=1/2*anteil;
+                colorval=imagergba((0-hanteil,0),(xold+32+hanteil,0),"load2",(pa1,pa2),interpolate->true);//lu,ru
+              );
+            );//end if xold
+            if(xold+32>imratiotile*32,
+              anteil=xold+32-imratiotile*32;
+              hanteil=1/2*anteil;
+              if(pa1<hanteil,
+                colrat=1/(mod(floor((pa1-hanteil)/(imratio3*32)),3)+1);
+                pa1=mod(pa1-hanteil,imratio3*32)+hanteil;
+                colorval=imagergba((0+hanteil,0),(hanteil+imratio3*32,0),"load4",(pa1,pa2),interpolate->true, repeat->true);
+              , if(pa1>xold+32-hanteil,
+                  colrat=1/(mod(floor((pa1-(xold+32-hanteil))/(imratio3*32)),3)+1);
+                  pa1=mod(pa1-(xold+32-hanteil),imratio3*32)+xold+32-hanteil;
+                  colorval=imagergba((xold+32-hanteil,0),(xold+32-hanteil+imratio3*32,0),"load3",(pa1,pa2),interpolate->true, repeat->true);
+                ,
+                  colorval=imagergba((0+hanteil,0),(xold+32-hanteil,0),"load2",(pa1,pa2),interpolate->true, repeat->true);
+                );
+              );
+            );//end if xold
+            colorval
+          );//flag==4
+
+
+          if(flag==3,
+            tilev=imagergba((0,0),(1024,0),"tilecanvas",#,interpolate->false);
+            tilenum=tilev_1;
+
+            if(col_1>=imratiotile*32,
+              tilenum=tilenum+1;
+              col1=col_1-imratiotile*32;
+            ,col1=col_1);
+            if(col_1<=0,
+              tilenum=tilenum-1;
+              col1=col_1+imratiotile*32;
+            );
+
+            canvasv=imagergba((0,0),(1024,0),"listcanvas",(tilenum,1),interpolate->false);
+            canvasnum=floor(canvasv_1);
+
+            if(abs(canvasnum-1)<=0.1,
+              if(abs(tilenum-1)<=0.1,
+                colorval=imagergba((0,0),(imratiotile*32,0),"loadm1",(col1,max(min(col_2,32),0)),repeat->true);
+              ,
+              if(floor(canvasv_2)==1,
+                colorval=imagergba((0,0),(imratiotile*32,0),"load5",(col1,max(min(col_2,32),0)),repeat->true);
+              ,
+              if(floor(canvasv_2)==5,
+                colorval=imagergba((0,0),(imratiotile*32,0),"load5",(col1,max(min(col_2,32),0)),repeat->true);
+              ,
+              if(floor(canvasv_2)==6,
+                colorval=imagergba((0,0),(imratiotile*32,0),"load6",(col1,max(min(col_2,32),0)),repeat->true);
+              ,
+              if(floor(canvasv_2)==8,
+                colorval=imagergba((0,0),(imratiotile*32,0),"load6",(col1,max(min(col_2,32),0)),repeat->true);
+              ,
+              if(floor(canvasv_2)==9,
+                colorval=imagergba((0,0),(imratiotile*32,0),"load5",(col1,max(min(col_2,32),0)),repeat->true);
+              ,
+              if(floor(canvasv_2)==11,
+                colorval=imagergba((0,0),(imratiotile*32,0),"load5",(col1,max(min(col_2,32),0)),repeat->true);
+              );););););););
+            );
+            if(abs(canvasnum-2)<=0.1,
+              colorval=imagergba((0,0),(imratiotile*32,0),"load2",(col1,max(min(col_2,32),0)),repeat->true);
+              );
+            if(abs(canvasnum-3)<=0.1,
+              if(abs(tilenum-1)<=0.1,
+                  colorval=imagergba((0,0),(imratiotile*32,0),"loadp1",(col1,max(min(col_2,32),0)),repeat->true);
+              ,
+              if(floor(canvasv_2)==3,
+                colorval=imagergba((0,0),(imratiotile*32,0),"load3",(col1,max(min(col_2,32),0)),repeat->true);
+              ,
+              if(floor(canvasv_2)==7,
+                colorval=imagergba((0,0),(imratiotile*32,0),"load7",(col1,max(min(col_2,32),0)),repeat->true);
+              ,
+              if(floor(canvasv_2)==10,
+                colorval=imagergba((0,0),(imratiotile*32,0),"load7",(col1,max(min(col_2,32),0)),repeat->true);
+              ););););
+            );
+            if(abs(canvasnum-4)<=0.1,
+                colorval=imagergba((0,0),(imratiotile*32,0),"load4",(col1,max(min(col_2,32),0)),repeat->true);
+            );
+            if(drag==false,
+              if(tilenum>=wholetile-1,
+                if(tilenum<wholetile,
+                  if(abs(canvasnum-1)<=0.1,
+                    colorval=imagergba((0,0),(imratiotile*32,0),"loadm2",(col1,max(min(col_2,32),0)),repeat->true);
+                  ,
+                  if(abs(canvasnum-2)<=0.1,
+                    colorval=imagergba((0,0),(imratiotile*32,0),"loadm2",(col1,max(min(col_2,32),0)),repeat->true);
+                  ,
+                  if(abs(canvasnum-3)<=0.1,
+                    colorval=imagergba((0,0),(imratiotile*32,0),"loadm2",(col1,max(min(col_2,32),0)),repeat->true);
+                  ,
+                  if(abs(canvasnum-4)<=0.1,
+                    colorval=imagergba((0,0),(imratiotile*32,0),"loadm2",(col1,max(min(col_2,32),0)),repeat->true);
+                  ););););
+                ,colorval=(0,0,0,0);
+                );
+              );
+            );
+
+          );//flag==3
+
+
+          if(flag==1,
+            tilev=imagergba((0,0),(1024,0),"tilecanvas",#,interpolate->false);
+            tilenum=round(tilev_1);
+
+            if(col_1>=imratiotile*32,
+              tilenum=tilenum+1;
+              col1=col_1-imratiotile*32;
+            ,col1=col_1);
+            if(col_1<=0,
+              tilenum=tilenum-1;
+              col1=col_1+imratiotile*32;
+            );
+
+            canvasv=imagergba((0,0),(1024,0),"listcanvas",(tilenum,1),interpolate->false);
+            canvasnum=floor(canvasv_1);
+
+            if(abs(canvasnum-1)<=0.1,
+              colorval=imagergba((0,0),(imratiotile*32,0),"load1",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+              );
+            if(abs(canvasnum-2)<=0.1,
+                colorval=imagergba((0,0),(imratiotile*32,0),"load2",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+            );
+            if(abs(canvasnum-3)<=0.1,
+                colorval=imagergba((0,0),(imratiotile*32,0),"load3",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+            );
+            if(abs(canvasnum-4)<=0.1,
+                colorval=imagergba((0,0),(imratiotile*32,0),"load4",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+            );
+          );//flag==1
+
+
+        ,
+          colorval=(0,0,0,0);
+        );
+        colorval
+      );//end colorplot
+
+      colorplot((0,0),(1024,0),"conftestcanvas",
+        p=#;
+        ref=expmp(imagergba((0,0),(1024,0),"mpcanvas",#,interpolate->true),scvel,base);
+
+        if(ref_4>0,
+          erg=conftestdevi(p,ref,0);
+          colvec=hue(erg_1+1/3);
+          colorval=(colvec_1,colvec_2,colvec_3,1);
+        ,
+          colorval=(0,0,0,0);
+        );
+        colorval
+      );//end colorplot
+
+      if(changecanvas==1,
+
+        colorplot((0,0),(1024,0),"aktcanvas2",
+          p=#;
+          col=expvel(imagergba((0,0),(1024,0),"ptcanvas2",#,interpolate->true),scvel,base);
+          ref=expmp(imagergba((0,0),(1024,0),"mpcanvas2",#,interpolate->true),scvel,base);
+          if(ref_4>0,
+
+            if(flag==7,
+              tilev=imagergba((0,0),(1024,0),"tilecanvas2",#,interpolate->false);
+              tilenum=round(tilev_1);
+
+              if(col_1>=imratiotile*32,
+                tilenum=tilenum+1;
+                col1=col_1-imratiotile*32;
+              ,col1=col_1);
+              if(col_1<=0,
+                tilenum=tilenum-1;
+                col1=col_1+imratiotile*32;
+              );
+
+              canvasv=imagergba((0,0),(1024,0),"listcanvas",(tilenum,1),interpolate->false);
+              canvasnum=floor(canvasv_1);
+
+              if(abs(canvasnum-1)<=0.1,
+                colorval=imagergba((0,0),(imratiotile*32,0),"load1",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+                );
+              if(abs(canvasnum-2)<=0.1,
+                  colorval=imagergba((0,0),(imratiotile*32,0),"load2",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+              );
+              if(abs(canvasnum-3)<=0.1,
+                  colorval=imagergba((0,0),(imratiotile*32,0),"load3",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+              );
+              if(abs(canvasnum-4)<=0.1,
+                  colorval=imagergba((0,0),(imratiotile*32,0),"load4",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+              );
+            );//flag==7
+
+            if(flag==6,
+              tpt=imagergba((0,0),(1024,0),"tilecanvas2",#, interpolate->false);
+              tilenum=floor(tpt_1);
+              cooradd=(tilenum-1)*imratiotile*32;
+              pa1=cooradd+col_1;
+              pa2=col_2;
+              pcomp=(pa1,pa2);
+
+              if(pcomp_2>28,alt1=0,alt1=1);if(pcomp_2>28.5,if(pcomp_2<31.5,alt1a=0,alt1a=1),alt1a=1);
+              if(pcomp_2<4,alt2=0,alt2=1);if(pcomp_2>0.5,if(pcomp_2<3.5,alt2a=0,alt2a=1),alt2a=1);
+              if(pcomp_2<18,if(pcomp_2>14,alt3=0,alt3=1),alt3=1);if(pcomp_2>14.5,if(pcomp_2<17.5,alt3a=0,alt3a=1),alt3a=1);
+
+              if(pcomp_2>18,if(pcomp_2<28,if(|(mod(pcomp_1,8),pcomp_2)-(0,23)|<4,alt4=0,alt4=1),alt4=1),alt4=1);
+              if(pcomp_2>18,if(pcomp_2<28,if(|(mod(pcomp_1,8),pcomp_2)-(8,23)|<4,alt5=0,alt5=1),alt5=1),alt5=1);
+
+              if(pcomp_2>18,if(pcomp_2<28,if(|(pcomp_1,pcomp_2)-(cooradd+0,23)|<3.5,alt6=0,alt6=1),alt6=1),alt6=1);
+              if(pcomp_2>18,if(pcomp_2<28,if(|(pcomp_1,pcomp_2)-(cooradd+32,23)|<3.5,alt7=0,alt7=1),alt7=1),alt7=1);
+              if(pcomp_2>18,if(pcomp_2<28,if(|(pcomp_1,pcomp_2)-(cooradd+8,23)|<3.5,alt6a=0,alt6a=1),alt6a=1),alt6a=1);
+              if(pcomp_2>18,if(pcomp_2<28,if(|(pcomp_1,pcomp_2)-(cooradd+16,23)|<3.5,alt6b=0,alt6b=1),alt6b=1),alt6b=1);
+              if(pcomp_2>18,if(pcomp_2<28,if(|(pcomp_1,pcomp_2)-(cooradd+24,23)|<3.5,alt6c=0,alt6c=1),alt6c=1),alt6c=1);
+
+
+              otr6=(8+4,9)+rotmat(pi/4)*((11+4,12)-(8+4,9));
+              ltr6=(8+4,9)+rotmat(2*pi/3)*(otr6-(8+4,9));
+              rtr6=(8+4,9)+rotmat(2*pi*2/3)*(otr6-(8+4,9));
+              ptr1=(8+4,9)+rotmat(2*pi/3)*(pcomp-(cooradd+8+4,9));
+              ptr2=(8+4,9)+rotmat(2*pi*2/3)*(pcomp-(cooradd+8+4,9));
+              if(pcomp_2>ltr6_2,if(pcomp_1<cooradd+rtr6_1,if(pcomp_1>cooradd+ltr6_1,if(ptr1_2>ltr6_2,if(ptr1_1>ltr6_1,if(ptr1_1<rtr6_1,if(ptr2_2>ltr6_2,if(ptr2_1>ltr6_1,if(ptr2_1<rtr6_1,alt8=0,alt8=1),alt8=1),alt8=1),alt8=1),alt8=1),alt8=1),alt8=1),alt8=1),alt8=1);
+              if(pcomp_2>ltr6_2+0.5,if(pcomp_1<cooradd+rtr6_1-0.5,if(pcomp_1>cooradd+ltr6_1+0.5,if(ptr1_2>ltr6_2+0.5,if(ptr1_1>ltr6_1+0.5,if(ptr1_1<rtr6_1-0.5,if(ptr2_2>ltr6_2+0.5,if(ptr2_1>ltr6_1+0.5,if(ptr2_1<rtr6_1-0.5,alt8b=0,alt8b=1),alt8b=1),alt8b=1),alt8b=1),alt8b=1),alt8b=1),alt8b=1),alt8b=1),alt8b=1);
+
+              prot=(8+4,9)+rotmat(pi/3)*(pcomp-(cooradd+8+4,9));
+              ptr1=(8+4,9)+rotmat(2*pi/3)*(prot-(8+4,9));
+              ptr2=(8+4,9)+rotmat(2*pi*2/3)*(prot-(8+4,9));
+              if(prot_2>ltr6_2,if(prot_1<rtr6_1,if(prot_1>ltr6_1,if(ptr1_2>ltr6_2,if(ptr1_1>ltr6_1,if(ptr1_1<rtr6_1,if(ptr2_2>ltr6_2,if(ptr2_1>ltr6_1,if(ptr2_1<rtr6_1,alt8a=0,alt8a=1),alt8a=1),alt8a=1),alt8a=1),alt8a=1),alt8a=1),alt8a=1),alt8a=1),alt8a=1);
+              if(prot_2>ltr6_2+0.5,if(prot_1<rtr6_1-0.5,if(prot_1>ltr6_1+0.5,if(ptr1_2>ltr6_2+0.5,if(ptr1_1>ltr6_1+0.5,if(ptr1_1<rtr6_1-0.5,if(ptr2_2>ltr6_2+0.5,if(ptr2_1>ltr6_1+0.5,if(ptr2_1<rtr6_1-0.5,alt8c=0,alt8c=1),alt8c=1),alt8c=1),alt8c=1),alt8c=1),alt8c=1),alt8c=1),alt8c=1),alt8c=1);
+
+              otr7=(24+4,9)+rotmat(pi/4)*((27+4,12)-(24+4,9));
+              ltr7=(24+4,9)+rotmat(2*pi/3)*(otr7-(24+4,9));
+              rtr7=(24+4,9)+rotmat(2*pi*2/3)*(otr7-(24+4,9));
+              ptr1=(24+4,9)+rotmat(2*pi/3)*(pcomp-(cooradd+24+4,9));
+              ptr2=(24+4,9)+rotmat(2*pi*2/3)*(pcomp-(cooradd+24+4,9));
+              if(pcomp_2>ltr7_2,if(pcomp_1<cooradd+rtr7_1,if(pcomp_1>cooradd+ltr7_1,if(ptr1_2>ltr7_2,if(ptr1_1>ltr7_1,if(ptr1_1<rtr7_1,if(ptr2_2>ltr7_2,if(ptr2_1>ltr7_1,if(ptr2_1<rtr7_1,alt9=0,alt9=1),alt9=1),alt9=1),alt9=1),alt9=1),alt9=1),alt9=1),alt9=1),alt9=1);
+              if(pcomp_2>ltr7_2+0.5,if(pcomp_1<cooradd+rtr7_1-0.5,if(pcomp_1>cooradd+ltr7_1+0.5,if(ptr1_2>ltr7_2+0.5,if(ptr1_1>ltr7_1+0.5,if(ptr1_1<rtr7_1-0.5,if(ptr2_2>ltr7_2+0.5,if(ptr2_1>ltr7_1+0.5,if(ptr2_1<rtr7_1-0.5,alt9b=0,alt9b=1),alt9b=1),alt9b=1),alt9b=1),alt9b=1),alt9b=1),alt9b=1),alt9b=1),alt9b=1);
+
+              prot=(24+4,9)+rotmat(pi/3)*(pcomp-(cooradd+24+4,9));
+              ptr1=(24+4,9)+rotmat(2*pi/3)*(prot-(24+4,9));
+              ptr2=(24+4,9)+rotmat(2*pi*2/3)*(prot-(24+4,9));
+              if(prot_2>ltr7_2,if(prot_1<rtr7_1,if(prot_1>ltr7_1,if(ptr1_2>ltr7_2,if(ptr1_1>ltr7_1,if(ptr1_1<rtr7_1,if(ptr2_2>ltr7_2,if(ptr2_1>ltr7_1,if(ptr2_1<rtr7_1,alt9a=0,alt9a=1),alt9a=1),alt9a=1),alt9a=1),alt9a=1),alt9a=1),alt9a=1),alt9a=1),alt9a=1);
+              if(prot_2>ltr7_2+0.5,if(prot_1<rtr7_1-0.5,if(prot_1>ltr7_1+0.5,if(ptr1_2>ltr7_2+0.5,if(ptr1_1>ltr7_1+0.5,if(ptr1_1<rtr7_1-0.5,if(ptr2_2>ltr7_2+0.5,if(ptr2_1>ltr7_1+0.5,if(ptr2_1<rtr7_1-0.5,alt9c=0,alt9c=1),alt9c=1),alt9c=1),alt9c=1),alt9c=1),alt9c=1),alt9c=1),alt9c=1),alt9c=1);
+
+              otr6=(0+4,9)+rotmat(pi/4)*((3+4,12)-(0+4,9));
+              ltr6=(0+4,9)+rotmat(2*pi/3)*(otr6-(0+4,9));
+              rtr6=(0+4,9)+rotmat(2*pi*2/3)*(otr6-(0+4,9));
+              ptr1=(0+4,9)+rotmat(2*pi/3)*(pcomp-(cooradd+0+4,9));
+              ptr2=(0+4,9)+rotmat(2*pi*2/3)*(pcomp-(cooradd+0+4,9));
+              if(pcomp_2>ltr6_2,if(pcomp_1<cooradd+rtr6_1,if(pcomp_1>cooradd+ltr6_1,if(ptr1_2>ltr6_2,if(ptr1_1>ltr6_1,if(ptr1_1<rtr6_1,if(ptr2_2>ltr6_2,if(ptr2_1>ltr6_1,if(ptr2_1<rtr6_1,alt10=0,alt10=1),alt10=1),alt10=1),alt10=1),alt10=1),alt10=1),alt10=1),alt10=1),alt10=1);
+              if(pcomp_2>ltr6_2+0.5,if(pcomp_1<cooradd+rtr6_1-0.5,if(pcomp_1>cooradd+ltr6_1+0.5,if(ptr1_2>ltr6_2+0.5,if(ptr1_1>ltr6_1+0.5,if(ptr1_1<rtr6_1-0.5,if(ptr2_2>ltr6_2+0.5,if(ptr2_1>ltr6_1+0.5,if(ptr2_1<rtr6_1-0.5,alt10b=0,alt10b=1),alt10b=1),alt10b=1),alt10b=1),alt10b=1),alt10b=1),alt10b=1),alt10b=1),alt10b=1);
+
+              prot=(0+4,9)+rotmat(pi/3)*(pcomp-(cooradd+0+4,9));
+              ptr1=(0+4,9)+rotmat(2*pi/3)*(prot-(0+4,9));
+              ptr2=(0+4,9)+rotmat(2*pi*2/3)*(prot-(0+4,9));
+              if(prot_2>ltr6_2,if(prot_1<rtr6_1,if(prot_1>ltr6_1,if(ptr1_2>ltr6_2,if(ptr1_1>ltr6_1,if(ptr1_1<rtr6_1,if(ptr2_2>ltr6_2,if(ptr2_1>ltr6_1,if(ptr2_1<rtr6_1,alt10a=0,alt10a=1),alt10a=1),alt10a=1),alt10a=1),alt10a=1),alt10a=1),alt10a=1),alt10a=1),alt10a=1);
+              if(prot_2>ltr6_2+0.5,if(prot_1<rtr6_1-0.5,if(prot_1>ltr6_1+0.5,if(ptr1_2>ltr6_2+0.5,if(ptr1_1>ltr6_1+0.5,if(ptr1_1<rtr6_1-0.5,if(ptr2_2>ltr6_2+0.5,if(ptr2_1>ltr6_1+0.5,if(ptr2_1<rtr6_1-0.5,alt10c=0,alt10c=1),alt10c=1),alt10c=1),alt10c=1),alt10c=1),alt10c=1),alt10c=1),alt10c=1),alt10c=1);
+
+              otr7=(16+4,9)+rotmat(pi/4)*((19+4,12)-(16+4,9));
+              ltr7=(16+4,9)+rotmat(2*pi/3)*(otr7-(16+4,9));
+              rtr7=(16+4,9)+rotmat(2*pi*2/3)*(otr7-(16+4,9));
+              ptr1=(16+4,9)+rotmat(2*pi/3)*(pcomp-(cooradd+16+4,9));
+              ptr2=(16+4,9)+rotmat(2*pi*2/3)*(pcomp-(cooradd+16+4,9));
+              if(pcomp_2>ltr7_2,if(pcomp_1<cooradd+rtr7_1,if(pcomp_1>cooradd+ltr7_1,if(ptr1_2>ltr7_2,if(ptr1_1>ltr7_1,if(ptr1_1<rtr7_1,if(ptr2_2>ltr7_2,if(ptr2_1>ltr7_1,if(ptr2_1<rtr7_1,alt11=0,alt11=1),alt11=1),alt11=1),alt11=1),alt11=1),alt11=1),alt11=1),alt11=1),alt11=1);
+              if(pcomp_2>ltr7_2+0.5,if(pcomp_1<cooradd+rtr7_1-0.5,if(pcomp_1>cooradd+ltr7_1+0.5,if(ptr1_2>ltr7_2+0.5,if(ptr1_1>ltr7_1+0.5,if(ptr1_1<rtr7_1-0.5,if(ptr2_2>ltr7_2+0.5,if(ptr2_1>ltr7_1+0.5,if(ptr2_1<rtr7_1-0.5,alt11b=0,alt11b=1),alt11b=1),alt11b=1),alt11b=1),alt11b=1),alt11b=1),alt11b=1),alt11b=1),alt11b=1);
+
+              prot=(16+4,9)+rotmat(pi/3)*(pcomp-(cooradd+16+4,9));
+              ptr1=(16+4,9)+rotmat(2*pi/3)*(prot-(16+4,9));
+              ptr2=(16+4,9)+rotmat(2*pi*2/3)*(prot-(16+4,9));
+              if(prot_2>ltr7_2,if(prot_1<rtr7_1,if(prot_1>ltr7_1,if(ptr1_2>ltr7_2,if(ptr1_1>ltr7_1,if(ptr1_1<rtr7_1,if(ptr2_2>ltr7_2,if(ptr2_1>ltr7_1,if(ptr2_1<rtr7_1,alt11a=0,alt11a=1),alt11a=1),alt11a=1),alt11a=1),alt11a=1),alt11a=1),alt11a=1),alt11a=1),alt11a=1);
+              if(prot_2>ltr7_2+0.5,if(prot_1<rtr7_1-0.5,if(prot_1>ltr7_1+0.5,if(ptr1_2>ltr7_2+0.5,if(ptr1_1>ltr7_1+0.5,if(ptr1_1<rtr7_1-0.5,if(ptr2_2>ltr7_2+0.5,if(ptr2_1>ltr7_1+0.5,if(ptr2_1<rtr7_1-0.5,alt11c=0,alt11c=1),alt11c=1),alt11c=1),alt11c=1),alt11c=1),alt11c=1),alt11c=1),alt11c=1),alt11c=1);
+
+
+              colorval=(0,0,0,0);
+              if(alt1*alt2*alt3*alt4*alt5*alt8*alt8a*alt9*alt9a*alt10*alt10a*alt11*alt11a==0,
+                colorval=(0,0,0,1);
+              );
+              if(alt1a*alt2a*alt3a==0,
+                colorval=(0,0.5,0.5,1);
+              );
+              if(alt8b*alt8c*alt6*alt7==0,
+                colorval=(0.5,0.7,0,1);
+              );
+              if(alt9b*alt9c*alt6b==0,
+                colorval=(0.5,0,0.7,1);
+              );
+              if(alt10b*alt10c*alt6c==0,
+                colorval=(0,0.5,0.7,1);
+              );
+              if(alt11b*alt11c*alt6a==0,
+                colorval=(0.5,0.5,0.7,1);
+              );
+            );//flag==6
+
+            if(flag==5,
+              tilev=imagergba((0,0),(1024,0),"tilecanvas2",#,interpolate->false);
+              tilenum=round(tilev_1);
+
+              if(col_1>=imratiotile*32,
+                tilenum=tilenum+1;
+                col1=col_1-imratiotile*32;
+              ,col1=col_1);
+              if(col_1<=0,
+                tilenum=tilenum-1;
+                col1=col_1+imratiotile*32;
+              );
+
+              canvasv=imagergba((0,0),(1024,0),"listcanvas",(tilenum,1),interpolate->false);
+              canvasnum=floor(canvasv_1);
+
+              if(abs(canvasnum-4)<=0.1,
+                colorval=imagergba((0,0),(imratiotile*32,0),"load1",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+                if(wholetile>4,
+                if(tilenum>2,
+                if(tilenum<wholetile-2,
+                  colorval=imagergba((0,0),(imratiotile*32,0),"load2",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+                )));
+                if(wholetile>8,
+                if(tilenum>4,
+                if(tilenum<wholetile-4,
+                  colorval=imagergba((0,0),(imratiotile*32,0),"load3",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+                )));
+                if(wholetile>12,
+                if(tilenum>6,
+                if(tilenum<wholetile-6,
+                  colorval=imagergba((0,0),(imratiotile*32,0),"load4",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+                )));
+              );
+              if(abs(canvasnum-3)<=0.1,
+                  colorval=imagergba((0,0),(imratiotile*32,0),"load1",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+                  if(wholetile>4,
+                  if(tilenum>2,
+                  if(tilenum<wholetile-2,
+                    colorval=imagergba((0,0),(imratiotile*32,0),"load2",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+                  )));
+                  if(wholetile>8,
+                  if(tilenum>4,
+                  if(tilenum<wholetile-4,
+                    colorval=imagergba((0,0),(imratiotile*32,0),"load3",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+                  )));
+              );
+              if(abs(canvasnum-2)<=0.1,
+                  colorval=imagergba((0,0),(imratiotile*32,0),"load1",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+                  if(wholetile>4,
+                  if(tilenum>2,
+                  if(tilenum<wholetile-2,
+                    colorval=imagergba((0,0),(imratiotile*32,0),"load2",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+                  )));
+              );
+              if(abs(canvasnum-1)<=0.1,
+                  colorval=imagergba((0,0),(imratiotile*32,0),"load1",(col1,max(min(col_2,32),0)),repeat->false,interpolate->false);
+              );
+              colorval
+            );//flag==5
+
+            if(flag==4,
+              tpt=imagergba((0,0),(1024,0),"tilecanvas2",#, interpolate->false);
+              tilenum=floor(tpt_1);
+              cooradd=(tilenum-1)*imratiotile*32;
+              pa1=cooradd+col_1;
+              pa2=col_2;
+              pcomp=(pa1,pa2);
+              if(col_1>=imratiotile*32,cooradd=(tilenum)*imratiotile*32; );
+              if(col_1<=0, cooradd=(tilenum-2)*imratiotile*32 );
+              pp=(pa1,pa2);
+              colorval=(0,0,0,0);
+              if(xold+32<imratio1*32,
+                colorval=imagergba((0,0),(imratio1*32,0),"load1",(pa1,pa2),interpolate->true);//lu,ru
+              );//end if xold
+              if(xold+32<imratiotile*32,
+                if(xold+32>imratio1*32,
+                  anteil=imratiotile*32-xold-32;
+                  hanteil=1/2*anteil;
+                  colorval=imagergba((0-hanteil,0),(xold+32+hanteil,0),"load2",(pa1,pa2),interpolate->true);//lu,ru
+                );
+              );//end if xold
+              if(xold+32>imratiotile*32,
+                anteil=xold+32-imratiotile*32;
+                hanteil=1/2*anteil;
+                if(pa1<hanteil,
+                  colrat=1/(mod(floor((pa1-hanteil)/(imratio3*32)),3)+1);
+                  pa1=mod(pa1-hanteil,imratio3*32)+hanteil;
+                  colorval=imagergba((0+hanteil,0),(hanteil+imratio3*32,0),"load4",(pa1,pa2),interpolate->true, repeat->true);
+                , if(pa1>xold+32-hanteil,
+                    colrat=1/(mod(floor((pa1-(xold+32-hanteil))/(imratio3*32)),3)+1);
+                    pa1=mod(pa1-(xold+32-hanteil),imratio3*32)+xold+32-hanteil;
+                    colorval=imagergba((xold+32-hanteil,0),(xold+32-hanteil+imratio3*32,0),"load3",(pa1,pa2),interpolate->true, repeat->true);
+                  ,
+                    colorval=imagergba((0+hanteil,0),(xold+32-hanteil,0),"load2",(pa1,pa2),interpolate->true, repeat->true);
+                  );
+                );
+              );//end if xold
+              colorval
+            );//flag==4
+
+            if(flag==3,
+              tilev=imagergba((0,0),(1024,0),"tilecanvas2",#,interpolate->false);
+              tilenum=floor(tilev_1);
+
+              if(col_1>=imratiotile*32,
+                tilenum=tilenum+1;
+                col1=col_1-imratiotile*32;
+              ,col1=col_1);
+              if(col_1<=0,
+                tilenum=tilenum-1;
+                col1=col_1+imratiotile*32;
+              );
+
+              canvasv=imagergba((0,0),(1024,0),"listcanvas",(tilenum,1),interpolate->false);
+              canvasnum=floor(canvasv_1);
+
+              if(abs(canvasnum-1)<=0.1,
+                if(floor(canvasv_2)==1,
+                  colorval=imagergba((0,0),(imratiotile*32,0),"load1",(col1,max(min(col_2,32),0)),repeat->true);
+                ,
+                if(floor(canvasv_2)==5,
+                  colorval=imagergba((0,0),(imratiotile*32,0),"load5",(col1,max(min(col_2,32),0)),repeat->true);
+                ,
+                if(floor(canvasv_2)==6,
+                  colorval=imagergba((0,0),(imratiotile*32,0),"load6",(col1,max(min(col_2,32),0)),repeat->true);
+                ,
+                if(floor(canvasv_2)==8,
+                  colorval=imagergba((0,0),(imratiotile*32,0),"load8",(col1,max(min(col_2,32),0)),repeat->true);
+                ,
+                if(floor(canvasv_2)==9,
+                  colorval=imagergba((0,0),(imratiotile*32,0),"load5",(col1,max(min(col_2,32),0)),repeat->true);
+                ,
+                if(floor(canvasv_2)==11,
+                  colorval=imagergba((0,0),(imratiotile*32,0),"load5",(col1,max(min(col_2,32),0)),repeat->true);
+                ););););););
+              );
+              if(abs(canvasnum-2)<=0.1,
+                colorval=imagergba((0,0),(imratiotile*32,0),"load2",(col1,max(min(col_2,32),0)),repeat->true);
+                );
+              if(abs(canvasnum-3)<=0.1,
+                if(floor(canvasv_2)==3,
+                  colorval=imagergba((0,0),(imratiotile*32,0),"load3",(col1,max(min(col_2,32),0)),repeat->true);
+                ,
+                if(floor(canvasv_2)==7,
+                  colorval=imagergba((0,0),(imratiotile*32,0),"load7",(col1,max(min(col_2,32),0)),repeat->true);
+                ,
+                if(floor(canvasv_2)==10,
+                  colorval=imagergba((0,0),(imratiotile*32,0),"load10",(col1,max(min(col_2,32),0)),repeat->true);
+                );););
+              );
+              if(abs(canvasnum-4)<=0.1,
+                  colorval=imagergba((0,0),(imratiotile*32,0),"load4",(col1,max(min(col_2,32),0)),repeat->true);
+              );
+
+              if(tilenum>=wholetile-1,
+                if(tilenum<wholetile,
+                  colorval=imagergba((0,0),(imratiotile*32,0),"loadm2",(col1,max(min(col_2,32),0)),repeat->true);
+                  ,colorval=(0,0,0,0);
+                );
+              );
+            );//flag==3
+
+            if(flag==1,
+              tilev=imagergba((0,0),(1024,0),"tilecanvas2",#,interpolate->false);
+              tilenum=floor(tilev_1);
+
+              if(col_1>=imratiotile*32,
+                tilenum=tilenum+1;
+                col1=col_1-imratiotile*32;
+              ,col1=col_1);
+              if(col_1<=0,
+                tilenum=tilenum-1;
+                col1=col_1+imratiotile*32;
+              );
+              canvasv=imagergba((0,0),(1024,0),"listcanvas",(tilenum,1),interpolate->false);
+              canvasnum=round(canvasv_1);
+              if(abs(canvasnum-1)<=0.1,
+                colorval=imagergba((0,0),(imratiotile*32,0),"load1",(col1,max(min(col_2,32),0)),repeat->true);
+                );
+              if(abs(canvasnum-2)<=0.1,
+                  colorval=imagergba((0,0),(imratiotile*32,0),"load2",(col1,max(min(col_2,32),0)),repeat->true);
+              );
+              if(abs(canvasnum-3)<=0.1,
+                  colorval=imagergba((0,0),(imratiotile*32,0),"load3",(col1,max(min(col_2,32),0)),repeat->true);
+              );
+              if(abs(canvasnum-4)<=0.1,
+                  colorval=imagergba((0,0),(imratiotile*32,0),"load4",(col1,max(min(col_2,32),0)),repeat->true);
+              );
+            ); //flag==1
+          ,
+            colorval=(0,0,0,0);
+          );
+          colorval
+        );//end colorplot
+
+        colorplot((0,0),(1024,0),"conftestcanvas2",
+          p=#;
+          ref=expmp(imagergba((0,0),(1024,0),"mpcanvas2",#,interpolate->true),scvel,base); //true
+          if(ref_4>0,
+            erg=conftestdevi(p,ref,1);
+            colvec=hue(erg_1+1/3);
+            colorval=(colvec_1,colvec_2,colvec_3,1);
+          ,
+            colorval=(0,0,0,0);
+          );
+          colorval
+        );//end colorplot
+      );//end if changecanvas
+
+
+    );//end if doorna
+
+    drawimage((0,0),(1024,0),"storecanvas",alpha->1);
+
+    if(flago==0,
+      drawimage((0,0),(1024,0),"aktcanvas",alpha->1);
+      drawimage((0,0),(1024,0),"conftestcanvas",alpha->0);
+
+      drawimage((0,0),(1024,0),"aktcanvas2",alpha->1);
+      drawimage((0,0),(1024,0),"conftestcanvas2",alpha->0);
+    ,
+      drawimage((0,0),(1024,0),"aktcanvas",alpha->1);
+      drawimage((0,0),(1024,0),"conftestcanvas",alpha->0.5);
+
+      drawimage((0,0),(1024,0),"aktcanvas2",alpha->1);
+      drawimage((0,0),(1024,0),"conftestcanvas2",alpha->0.5);
+    );
+
+    </script>
+
+
+    <script type="text/javascript">
+
+    var cdy= CindyJS({
+      scripts: "cs*",
+      autoplay: true,
+      csconsole: false,
+      use: ["CindyGL"],
+      images: {orna: "flower3.png",
+              floral1: "floral1n.png",
+              floral2: "floral2n.png",
+              floral3: "floral3n.png",
+              floral4: "floral4n.png",
+              text1: "Text21.png",
+              text2: "Text22.png",
+              text3: "Spirals.png",
+              text4: "Spirals2.png"},
+      geometry: [
+        { name: "A", type: "Free", pos: [ 1174,25,1 ], color: [ 1.0, 0.0, 0.0 ], pinned: true, labeled: false, visible: false },
+        { name: "B", type: "Free", pos: [ 1174,470,1], color: [ 1.0, 0.0, 0.0 ], pinned: true, labeled: false, visible: false },
+        { name: "a", type: "Segment", color: [ 0.0, 0.0, 0.0 ], args: [ "A", "B" ], labeled: false, size: 2 },
+        { name: "C", type: "PointOnSegment", pos: [ 1174,355,1], color: [ 1.0, 0.0, 0.0 ], args: [ "a" ], labeled: false, narrow: true },
+        { name: "D", type: "PointOnSegment", pos: [ 1174,105,1], color: [ 0.0, 1.0, 0.0 ], args: [ "a" ], labeled: false, narrow: true }],
+      ports: [{
+        id: "CSCanvas",
+        transform: [{
+          visibleRect: [0, 512, 1224, 0]
+        }]
+      }]
+    });
+
+    var real = function(r) {
+      return {
+        "ctype": "number",
+        "value": {
+          'real': r,
+          'imag': 0
+        }
+      };
+    };
+
+    var list = function(l) {
+      return {
+        'ctype': 'list',
+        'value': l
+      };
+    };
+
+  function hexToRgb(hex) {
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : null;
+  };
+
+  var countbutton=1;
+  function setColor(btn){
+    cdy.evokeCS('javascript("countbutton=" + mod(countorna,2))');
+
+      var property = document.getElementById(btn);
+      if (countbutton == 1){
+          property.style.backgroundColor = "#7FFF00"
+      }
+      else{
+          property.style.backgroundColor = "#1E90FF"
+      }
+  };
+
+
+    </script>
+
+  </head>
+  <body>
+    <div id="container">
+
+      <div id="controls">
+        &nbsp;&nbsp;<u>Color:</u>&nbsp;&nbsp;
+        <input type="color" value="#007fff" id="color" >
+        &nbsp;
+
+        <button id="reset" class="box" onclick="cdy.evokeCS('reset()');" >
+          Reset
+        </button>
+
+        &nbsp;&nbsp;<u>Width:</u> &nbsp;&nbsp; min &nbsp;
+        <input type="range" min="11" max="100" value="100" class="slider" id="wRange">
+        &nbsp;&nbsp;max &nbsp;
+
+        <button id="undo" class="box" onclick="cdy.evokeCS('undo()');" >
+          Undo
+        </button>
+
+        &nbsp;&nbsp;<u>Pressure:</u> &nbsp;&nbsp;0&nbsp;
+        <input type="range" min="0" max="100" value="50" class="slider" id="pRange">
+        &nbsp;&nbsp;1
+
+        &nbsp;&nbsp;<u>Altitude:</u> &nbsp;&nbsp;0&nbsp;
+        <input type="range" min="0" max="100" value="0" class="slider" id="aRange">
+        &nbsp;&nbsp;1&nbsp;&nbsp;&nbsp;&nbsp;
+
+        <button id="orna" class="box" onclick="cdy.evokeCS('ornaonoff()');"  >
+          Orna
+        </button>
+
+
+      </div>
+    </div>
+
+    <canvas id="CSCanvas">
+      <script type="text/javascript" src="TouchEvent.js"></script>
+    </canvas>
+
+
+    <script type="text/javascript">
+
+    CindyJS.registerPlugin(1, "TouchEvent", function(api) {
+
+      api.defineFunction("penforce", 0, function(args, modifs) {
+          return {
+              ctype: "number",
+              value: {
+                'real': force,
+                'imag' : 0
+              }
+          };
+      });
+
+      api.defineFunction("penaltitude", 0, function(args, modifs) {
+          return {
+              ctype: "number",
+              value: {
+                'real': altitudeAngle,
+                'imag' : 0
+              }
+          };
+      });
+  });
+
+  </script>
+</body>
+</html>
